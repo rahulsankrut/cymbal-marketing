@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { GoogleGenAI } from '@google/genai';
@@ -508,7 +508,8 @@ export class GeminiStudioGateway {
 
   public readVaultMediaAsBase64(mediaUrl?: string): { dataBase64: string; mimeType: string } | null {
     if (!mediaUrl) return null;
-    const fileName = mediaUrl.replace(/^\/media\//, '');
+    const fileName = basename(mediaUrl.replace(/^\/media\//, ''));
+    if (!fileName) return null;
     const fullPath = join(this.vault.getMediaDir(), fileName);
     if (!existsSync(fullPath)) return null;
     const buf = readFileSync(fullPath);

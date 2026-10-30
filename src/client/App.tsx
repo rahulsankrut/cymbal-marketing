@@ -108,6 +108,12 @@ export function App() {
   const [newSceneMotion, setNewSceneMotion] = useState('');
   const [newSceneVoiceover, setNewSceneVoiceover] = useState('');
 
+  // New Reference Anchor form state
+  const [showNewAnchorForm, setShowNewAnchorForm] = useState(false);
+  const [newAnchorName, setNewAnchorName] = useState('');
+  const [newAnchorCategory, setNewAnchorCategory] = useState<'aircraft' | 'cockpit' | 'crew' | 'logo' | 'environment'>('aircraft');
+  const [newAnchorPrompt, setNewAnchorPrompt] = useState('');
+
   async function loadBootstrap(selectCampaignId?: string) {
     try {
       const res = await fetch('/api/bootstrap');
@@ -180,6 +186,10 @@ export function App() {
           brandKitId: activeBrandKit?.id,
         }),
       });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Failed to create campaign (${res.status})`);
+      }
       const created: CampaignDetail = await res.json();
       setActiveCampaign(created);
       setActiveStage(1);
@@ -253,6 +263,10 @@ export function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sceneCount: 3 }),
       });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Storyboard generation failed (${res.status})`);
+      }
       const updated: CampaignDetail = await res.json();
       setActiveCampaign(updated);
       setActiveStage(2);
@@ -329,6 +343,7 @@ export function App() {
   async function handleGenerateAnchor(anchorId: string) {
     if (!activeCampaign) return;
     setBusyAction(`anchor-${anchorId}`);
+    setErrorBanner(null);
     try {
       const res = await fetch(
         `/api/campaigns/${activeCampaign.id}/anchors/${anchorId}/generate`,
@@ -338,10 +353,51 @@ export function App() {
           body: JSON.stringify({}),
         }
       );
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Anchor generation failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  async function handleCreateReferenceAnchor(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeCampaign || !newAnchorName.trim()) return;
+    setBusyAction('create-anchor');
+    setErrorBanner(null);
+    try {
+      const res = await fetch(`/api/campaigns/${activeCampaign.id}/anchors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAnchorName.trim(),
+          category: newAnchorCategory,
+          description: newAnchorPrompt.trim() || `${newAnchorName.trim()} visual continuity anchor`,
+          generationPrompt:
+            newAnchorPrompt.trim() ||
+            `Photorealistic Cymbal Aerospace ${newAnchorCategory}: ${newAnchorName.trim()}, Stratosphere Obsidian and Titanium livery.`,
+          generateNow: true,
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Failed to create anchor (${res.status})`);
+      }
+      const detailRes = await fetch(`/api/campaigns/${activeCampaign.id}`);
+      if (detailRes.ok) {
+        setActiveCampaign(await detailRes.json());
+      }
+      setNewAnchorName('');
+      setNewAnchorPrompt('');
+      setShowNewAnchorForm(false);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -358,6 +414,7 @@ export function App() {
   ) {
     if (!activeCampaign) return;
     setBusyAction(`${sceneId}-${modality}-${options?.extendVideo ? 'ext' : 'gen'}`);
+    setErrorBanner(null);
     try {
       const res = await fetch(
         `/api/campaigns/${activeCampaign.id}/scenes/${sceneId}/generate`,
@@ -370,13 +427,17 @@ export function App() {
           }),
         }
       );
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
-        if (options?.conversationalEdit) {
-          setSceneEditPrompts((prev) => ({ ...prev, [`${sceneId}-${modality}`]: '' }));
-        }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Generation failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+      if (options?.conversationalEdit) {
+        setSceneEditPrompts((prev) => ({ ...prev, [`${sceneId}-${modality}`]: '' }));
+      }
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -387,16 +448,21 @@ export function App() {
   ) {
     if (!activeCampaign) return;
     setBusyAction(`batch-${modality}`);
+    setErrorBanner(null);
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/batch-generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modality }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Batch generation failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -422,6 +488,7 @@ export function App() {
     e.preventDefault();
     if (!activeCampaign) return;
     setBusyAction('voice-design');
+    setErrorBanner(null);
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/voice-design`, {
         method: 'POST',
@@ -433,10 +500,14 @@ export function App() {
           personaPrompt: voicePersonaPrompt,
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Voice design failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -445,16 +516,21 @@ export function App() {
   async function handleGenerateMusic(modelId: 'lyria-3.5' | 'lyria-3-clip-preview') {
     if (!activeCampaign) return;
     setBusyAction(`music-${modelId}`);
+    setErrorBanner(null);
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/music/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modelId }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Music score generation failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -463,16 +539,21 @@ export function App() {
   async function handleRunBrandEvaluation() {
     if (!activeCampaign) return;
     setBusyAction('brand-eval');
+    setErrorBanner(null);
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/brand-eval`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Brand evaluation failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -481,6 +562,7 @@ export function App() {
   async function handleAutoFixFinding(findingId: string) {
     if (!activeCampaign) return;
     setBusyAction(`autofix-${findingId}`);
+    setErrorBanner(null);
     try {
       const res = await fetch(
         `/api/campaigns/${activeCampaign.id}/brand-eval/findings/${findingId}/autofix`,
@@ -490,10 +572,14 @@ export function App() {
           body: JSON.stringify({}),
         }
       );
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Auto-fix failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -502,16 +588,21 @@ export function App() {
   async function handleAssembleMasterCut() {
     if (!activeCampaign) return;
     setBusyAction('assemble-master');
+    setErrorBanner(null);
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/assemble`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      if (res.ok) {
-        const data = await res.json();
-        setActiveCampaign(data.campaign);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Master cut assembly failed (${res.status})`);
       }
+      const data = await res.json();
+      setActiveCampaign(data.campaign);
+    } catch (err) {
+      setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
@@ -522,6 +613,7 @@ export function App() {
       return (
         acc +
         (s.stale.keyframe_start ? 1 : 0) +
+        (s.stale.keyframe_end ? 1 : 0) +
         (s.stale.motion_video ? 1 : 0) +
         (s.stale.voiceover_audio ? 1 : 0)
       );
@@ -568,11 +660,17 @@ export function App() {
               onChange={(e) => void loadBootstrap(e.target.value)}
               className="bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
             >
-              {campaigns.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title} (Stage {c.currentStage}/6)
-                </option>
-              ))}
+              {campaigns.map((c) => {
+                const stageNum =
+                  c.id === activeCampaign?.id
+                    ? Math.max(c.currentStage, activeCampaign.currentStage, activeStage)
+                    : c.currentStage;
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.title} (Stage {stageNum}/6)
+                  </option>
+                );
+              })}
             </select>
 
             <div className="hidden md:flex items-center gap-2 text-xs bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg">
@@ -1157,7 +1255,73 @@ export function App() {
                     visually locked across shots.
                   </p>
                 </div>
+                <button
+                  type="button"
+                  data-testid="toggle-new-anchor-btn"
+                  onClick={() => setShowNewAnchorForm((v) => !v)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New Reference Anchor
+                </button>
               </div>
+
+              {showNewAnchorForm && (
+                <form
+                  onSubmit={handleCreateReferenceAnchor}
+                  className="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+                >
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Anchor Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CX-900 CryoNacelle"
+                      value={newAnchorName}
+                      onChange={(e) => setNewAnchorName(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Category</label>
+                    <select
+                      value={newAnchorCategory}
+                      onChange={(e) =>
+                        setNewAnchorCategory(
+                          e.target.value as 'aircraft' | 'cockpit' | 'crew' | 'logo' | 'environment'
+                        )
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    >
+                      <option value="aircraft">aircraft</option>
+                      <option value="cockpit">cockpit</option>
+                      <option value="crew">crew</option>
+                      <option value="logo">logo</option>
+                      <option value="environment">environment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Visual Generation Prompt
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Describe livery, materials, lighting..."
+                      value={newAnchorPrompt}
+                      onChange={(e) => setNewAnchorPrompt(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={busyAction === 'create-anchor'}
+                    className="py-1.5 px-3 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs cursor-pointer"
+                  >
+                    {busyAction === 'create-anchor'
+                      ? 'Generating Anchor...'
+                      : 'Create & Generate Anchor'}
+                  </button>
+                </form>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {activeCampaign.anchors.map((anchor) => (

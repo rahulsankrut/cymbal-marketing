@@ -149,6 +149,15 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
       const updated = await vault.getCampaign(campaign.id);
       res.json(updated);
     } catch (err) {
+      orchestrator.emitEvent({
+        campaignId: req.params.id,
+        type: 'job.failed',
+        stage: 2,
+        sceneId: null,
+        modality: 'storyboard',
+        modelId: 'gemini-3.8-flash',
+        message: `Storyboard generation failed: ${(err as Error).message}`,
+      });
       res.status(400).json({ error: (err as Error).message });
     }
   });
@@ -260,10 +269,11 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   });
 
   // Switch active take in Take History
-  app.post('/api/campaigns/:id/active-take', async (req, res) => {
+  app.post(['/api/campaigns/:id/active-take', '/api/campaigns/:id/ActiveTake'], async (req, res) => {
     try {
+      const campaignId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const campaign = await vault.setActiveTake(
-        req.params.id,
+        campaignId,
         req.body.sceneId || null,
         req.body.modality,
         req.body.takeId
@@ -333,6 +343,15 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
       const updated = await vault.getCampaign(campaign.id);
       res.json({ report, campaign: updated });
     } catch (err) {
+      orchestrator.emitEvent({
+        campaignId: req.params.id,
+        type: 'job.failed',
+        stage: 6,
+        sceneId: null,
+        modality: 'brand_eval',
+        modelId: 'gemini-3.8-flash',
+        message: `Brand Evaluation failed: ${(err as Error).message}`,
+      });
       res.status(400).json({ error: (err as Error).message });
     }
   });

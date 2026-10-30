@@ -80,13 +80,27 @@ export class StudioPipelineOrchestrator {
       message: `Generating Reference Anchor "${anchor.name}" via Nano Banana 2.1...`,
     });
 
-    const result = await this.gateway.generateOrEditImage({
-      campaignId,
-      sceneId: null,
-      modality: 'anchor_image',
-      prompt,
-      previousInteractionId: promptOverride && anchor.interactionId ? anchor.interactionId : undefined,
-    });
+    let result;
+    try {
+      result = await this.gateway.generateOrEditImage({
+        campaignId,
+        sceneId: null,
+        modality: 'anchor_image',
+        prompt,
+        previousInteractionId: promptOverride && anchor.interactionId ? anchor.interactionId : undefined,
+      });
+    } catch (err) {
+      this.emitEvent({
+        campaignId,
+        type: 'job.failed',
+        stage: 3,
+        sceneId: null,
+        modality: 'anchor_image',
+        modelId: 'gemini-nano-banana-2.1',
+        message: `Anchor generation failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
 
     const take = await this.vault.appendTake({
       campaignId,
@@ -170,14 +184,28 @@ export class StudioPipelineOrchestrator {
         message: `${previousInteractionId ? 'Conversationally editing' : 'Generating'} ${input.modality} for "${scene.title}"...`,
       });
 
-      const result = await this.gateway.generateOrEditImage({
-        campaignId: campaign.id,
-        sceneId: scene.id,
-        modality: input.modality,
-        prompt,
-        referenceImagePaths,
-        previousInteractionId,
-      });
+      let result;
+      try {
+        result = await this.gateway.generateOrEditImage({
+          campaignId: campaign.id,
+          sceneId: scene.id,
+          modality: input.modality,
+          prompt,
+          referenceImagePaths,
+          previousInteractionId,
+        });
+      } catch (err) {
+        this.emitEvent({
+          campaignId: campaign.id,
+          type: 'job.failed',
+          stage: 3,
+          sceneId: scene.id,
+          modality: input.modality,
+          modelId: 'gemini-nano-banana-2.1',
+          message: `Keyframe generation failed for "${scene.title}": ${(err as Error).message}`,
+        });
+        throw err;
+      }
 
       const take = await this.vault.appendTake({
         campaignId: campaign.id,
@@ -246,16 +274,30 @@ export class StudioPipelineOrchestrator {
         ? (activeTake?.durationSeconds || scene.targetDurationSeconds) + 4
         : input.durationSeconds || scene.targetDurationSeconds;
 
-      const result = await this.gateway.synthesizeOrEditVideo({
-        campaignId: campaign.id,
-        sceneId: scene.id,
-        prompt,
-        startKeyframe,
-        endKeyframe,
-        sourceVideoForExtension,
-        previousInteractionId,
-        durationSeconds: targetDuration,
-      });
+      let result;
+      try {
+        result = await this.gateway.synthesizeOrEditVideo({
+          campaignId: campaign.id,
+          sceneId: scene.id,
+          prompt,
+          startKeyframe,
+          endKeyframe,
+          sourceVideoForExtension,
+          previousInteractionId,
+          durationSeconds: targetDuration,
+        });
+      } catch (err) {
+        this.emitEvent({
+          campaignId: campaign.id,
+          type: 'job.failed',
+          stage: 4,
+          sceneId: scene.id,
+          modality: 'motion_video',
+          modelId: 'gemini-omni-1.1-flash',
+          message: `Motion video synthesis failed for "${scene.title}": ${(err as Error).message}`,
+        });
+        throw err;
+      }
 
       const take = await this.vault.appendTake({
         campaignId: campaign.id,
@@ -306,14 +348,28 @@ export class StudioPipelineOrchestrator {
       message: `Synthesizing voiceover for "${scene.title}" with voice "${campaign.voicePersona.displayName}"...`,
     });
 
-    const result = await this.gateway.synthesizeSceneVoiceover({
-      campaignId: campaign.id,
-      sceneId: scene.id,
-      text,
-      vocalStyleDirective: scene.vocalStyleDirective,
-      voiceId: campaign.voicePersona.voiceId,
-      previousInteractionId,
-    });
+    let result;
+    try {
+      result = await this.gateway.synthesizeSceneVoiceover({
+        campaignId: campaign.id,
+        sceneId: scene.id,
+        text,
+        vocalStyleDirective: scene.vocalStyleDirective,
+        voiceId: campaign.voicePersona.voiceId,
+        previousInteractionId,
+      });
+    } catch (err) {
+      this.emitEvent({
+        campaignId: campaign.id,
+        type: 'job.failed',
+        stage: 5,
+        sceneId: scene.id,
+        modality: 'voiceover_audio',
+        modelId: 'gemini-3.8-flash-tts',
+        message: `Voiceover synthesis failed for "${scene.title}": ${(err as Error).message}`,
+      });
+      throw err;
+    }
 
     const take = await this.vault.appendTake({
       campaignId: campaign.id,
@@ -409,13 +465,27 @@ export class StudioPipelineOrchestrator {
       campaign.scenes.reduce((acc, s) => acc + (s.targetDurationSeconds || 6), 0) ||
       campaign.spotDurationSeconds;
 
-    const result = await this.gateway.composeCampaignMusic({
-      campaignId: campaign.id,
-      prompt,
-      keyframeImages,
-      modelId,
-      durationSeconds: totalTargetDuration,
-    });
+    let result;
+    try {
+      result = await this.gateway.composeCampaignMusic({
+        campaignId: campaign.id,
+        prompt,
+        keyframeImages,
+        modelId,
+        durationSeconds: totalTargetDuration,
+      });
+    } catch (err) {
+      this.emitEvent({
+        campaignId: campaign.id,
+        type: 'job.failed',
+        stage: 5,
+        sceneId: null,
+        modality: 'music_score',
+        modelId,
+        message: `Music score composition failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
 
     const take = await this.vault.appendTake({
       campaignId: campaign.id,

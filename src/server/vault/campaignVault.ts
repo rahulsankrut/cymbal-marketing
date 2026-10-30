@@ -519,6 +519,10 @@ export class CampaignVault {
         scene.stale.motion_video = true;
         cascadedStaleModalities.push('motion_video');
       }
+      if (campaign.activeMasterTakeId && !cascadedStaleModalities.includes('master_video')) {
+        campaign.masterStale = true;
+        cascadedStaleModalities.push('master_video');
+      }
     }
 
     if (motionChanged) {
@@ -591,12 +595,14 @@ export class CampaignVault {
     if (shouldActivate) {
       if (input.modality === 'music_score') {
         campaign.activeMusicTakeId = take.id;
+        if (campaign.currentStage < 5) campaign.currentStage = 5;
         if (campaign.activeMasterTakeId) {
           campaign.masterStale = true;
         }
       } else if (input.modality === 'master_video') {
         campaign.activeMasterTakeId = take.id;
         campaign.masterStale = false;
+        campaign.currentStage = 6;
       } else if (input.sceneId) {
         const scene = campaign.scenes.find((s) => s.id === input.sceneId);
         if (scene) {
@@ -609,6 +615,16 @@ export class CampaignVault {
             input.modality === 'voiceover_audio'
           ) {
             scene.stale[input.modality] = false;
+          }
+          if (
+            (input.modality === 'keyframe_start' || input.modality === 'keyframe_end') &&
+            campaign.currentStage < 3
+          ) {
+            campaign.currentStage = 3;
+          } else if (input.modality === 'motion_video' && campaign.currentStage < 4) {
+            campaign.currentStage = 4;
+          } else if (input.modality === 'voiceover_audio' && campaign.currentStage < 5) {
+            campaign.currentStage = 5;
           }
           // If a new keyframe replaced an older keyframe while motion_video already existed,
           // mark downstream motion_video stale non-destructively!
@@ -663,6 +679,14 @@ export class CampaignVault {
       }
       const prevTakeId = scene.activeTakes[modality];
       scene.activeTakes[modality] = take.id;
+      if (
+        modality === 'keyframe_start' ||
+        modality === 'keyframe_end' ||
+        modality === 'motion_video' ||
+        modality === 'voiceover_audio'
+      ) {
+        scene.stale[modality] = false;
+      }
       if (
         (modality === 'keyframe_start' || modality === 'keyframe_end') &&
         prevTakeId &&
