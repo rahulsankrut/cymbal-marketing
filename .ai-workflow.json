@@ -2,10 +2,10 @@
   "projectId": "proj-mvv00qd2-ra77",
   "name": "Cymbal Aerospace Marketing",
   "workspacePath": "/Users/rahulsankrut/Desktop/Cybmal Aerospace Marketing",
-  "activeIterationId": "iter-mvv00qd2-1kr7",
-  "activeIterationTitle": "Iteration #1: Initial Build",
-  "brief": "Marketing and video generation studio powered by Gemini models like omni, nano banana etc. It brings creative briefing, storyboarding, image generation, motion video synthesis, voiceover/music scoring, and automated brand evaluation into a single studio interface.",
-  "updatedAt": "2026-10-30T22:27:37.569Z",
+  "activeIterationId": "iter-mvvln6yx-i3i9",
+  "activeIterationTitle": "Iter #2: UI and UX simplification",
+  "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
+  "updatedAt": "2026-10-30T23:28:31.597Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -276,6 +276,273 @@
           ]
         }
       ]
+    },
+    {
+      "id": "iter-mvvln6yx-i3i9",
+      "number": 2,
+      "title": "Iter #2: UI and UX simplification",
+      "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
+      "createdAt": "2026-10-30T23:24:28.041Z",
+      "phases": [
+        {
+          "id": "phase-1",
+          "number": 1,
+          "title": "Idea, Research & Prototyping",
+          "mode": "HITL",
+          "status": "completed",
+          "notes": "Completed UI/UX cognitive load audit of src/client/App.tsx (1,098 lines) vs. Storycraft & Material 3 progressive disclosure patterns, verified Vertex AI ADC (vertex-ai-demos-468803), and updated research.md.",
+          "items": [
+            {
+              "id": "p1-brief",
+              "label": "Capture feature brief or stakeholder transcript (client-brief.md)",
+              "completed": true,
+              "userToggled": false,
+              "manuallyUnchecked": false
+            },
+            {
+              "id": "p1-scaffold",
+              "label": "Scaffold workflow directories (issues/, issues/done/, ralph/)",
+              "completed": true,
+              "userToggled": false,
+              "manuallyUnchecked": false
+            },
+            {
+              "id": "p1-credentials",
+              "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+              "completed": true
+            },
+            {
+              "id": "p1-research",
+              "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+              "completed": true
+            },
+            {
+              "id": "p1-prototype",
+              "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-2",
+          "number": 2,
+          "title": "The Grill Session (Native /grill-me)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p2-invoke",
+              "label": "Run native /grill-me interview against client-brief.md & codebase",
+              "completed": false
+            },
+            {
+              "id": "p2-decisions",
+              "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
+              "completed": false
+            },
+            {
+              "id": "p2-edgecases",
+              "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
+              "completed": false
+            },
+            {
+              "id": "p2-shared",
+              "label": "Confirm shared design concept (Fred Brooks alignment)",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-3",
+          "number": 3,
+          "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p3-modules",
+              "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
+              "completed": false
+            },
+            {
+              "id": "p3-testing",
+              "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
+              "completed": false
+            },
+            {
+              "id": "p3-outofscope",
+              "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
+              "completed": false
+            },
+            {
+              "id": "p3-prd-written",
+              "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-4",
+          "number": 4,
+          "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p4-draft",
+              "label": "Draft vertical tracer-bullet slices from issues/prd.md",
+              "completed": false
+            },
+            {
+              "id": "p4-tracer",
+              "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
+              "completed": false
+            },
+            {
+              "id": "p4-afk-tags",
+              "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
+              "completed": false
+            },
+            {
+              "id": "p4-dag",
+              "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
+              "completed": false
+            },
+            {
+              "id": "p4-created",
+              "label": "Write local markdown tickets (issues/NNN-*.md)",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-5",
+          "number": 5,
+          "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
+          "mode": "AFK",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p5-once",
+              "label": "Rehearse single vertical slice iteration & observe agent",
+              "completed": false
+            },
+            {
+              "id": "p5-tdd",
+              "label": "Verify strict vertical TDD (1 failing test RED -> minimal code GREEN -> repeat)",
+              "completed": false
+            },
+            {
+              "id": "p5-loops",
+              "label": "Verify automated feedback loops pass (tests + typecheck)",
+              "completed": false
+            },
+            {
+              "id": "p5-commit",
+              "label": "Verify structured commit & move completed ticket to issues/done/",
+              "completed": false,
+              "userToggled": true,
+              "manuallyUnchecked": true
+            },
+            {
+              "id": "p5-afk-all",
+              "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
+              "completed": false,
+              "userToggled": true,
+              "manuallyUnchecked": true
+            }
+          ]
+        },
+        {
+          "id": "phase-6",
+          "number": 6,
+          "title": "Review & Live Browser QA (Native /browser + Prebuilt Critique)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p6-review",
+              "label": "Run fresh-context automated code review with pushed coding standards",
+              "completed": false
+            },
+            {
+              "id": "p6-manual-qa",
+              "label": "Run live browser QA (Native /browser + prebuilt design-critique / chrome-devtools)",
+              "completed": false
+            },
+            {
+              "id": "p6-qa-tickets",
+              "label": "File any discovered QA bugs as new vertical tickets in issues/",
+              "completed": false
+            },
+            {
+              "id": "p6-archive-prd",
+              "label": "Archive completed issues/prd.md into issues/done/ to prevent Doc Rot",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-7",
+          "number": 7,
+          "title": "Deep Architecture & Memory (Native /learn)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p7-explore",
+              "label": "Scan codebase for shallow modules & seam friction",
+              "completed": false
+            },
+            {
+              "id": "p7-compare",
+              "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
+              "completed": false
+            },
+            {
+              "id": "p7-rfc",
+              "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "phase-8",
+          "number": 8,
+          "title": "Deploy to Dev Environment (Google Cloud Project)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p8-gcp-project",
+              "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
+              "completed": false
+            },
+            {
+              "id": "p8-apis-secrets",
+              "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
+              "completed": false
+            },
+            {
+              "id": "p8-deploy",
+              "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+              "completed": false
+            },
+            {
+              "id": "p8-smoke-test",
+              "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+              "completed": false
+            }
+          ]
+        }
+      ]
     }
   ],
   "phases": [
@@ -285,7 +552,7 @@
       "title": "Idea, Research & Prototyping",
       "mode": "HITL",
       "status": "completed",
-      "notes": "Synthesized research.md across 4 cloned Google GenMedia repos (genmedia-creative-studio, dreamboard, storycraft, vigenair), 6 internal Ad Marketing Skills, and live Vertex AI ADC (vertex-ai-demos-468803) endpoint verification.",
+      "notes": "Completed UI/UX cognitive load audit of src/client/App.tsx (1,098 lines) vs. Storycraft & Material 3 progressive disclosure patterns, verified Vertex AI ADC (vertex-ai-demos-468803), and updated research.md.",
       "items": [
         {
           "id": "p1-brief",
@@ -304,23 +571,17 @@
         {
           "id": "p1-credentials",
           "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
-          "completed": true,
-          "userToggled": true,
-          "manuallyUnchecked": false
+          "completed": true
         },
         {
           "id": "p1-research",
           "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
-          "completed": true,
-          "userToggled": true,
-          "manuallyUnchecked": false
+          "completed": true
         },
         {
           "id": "p1-prototype",
           "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
-          "completed": false,
-          "userToggled": true,
-          "manuallyUnchecked": true
+          "completed": false
         }
       ]
     },
@@ -329,29 +590,28 @@
       "number": 2,
       "title": "The Grill Session (Native /grill-me)",
       "mode": "HITL",
-      "status": "completed",
-      "notes": "Aligned on 6-stage Guided Studio Pipeline + Non-Linear Scene Canvas, Full-Stack TypeScript (@google/genai >=2.29.1 + Express/Fastify + SQLite/JSON + FFmpeg), Nano Banana 2.1 reference fusion + Omni 1.1 Flash keyframe-locked motion with stateful previous_interaction_id editing, Gemini 3.8 Flash TTS Voice Design + keyframe-conditioned Lyria 3.5 scoring with -12dB ducking, Multimodal Structured Brand Eval with 1-click auto-fix, and pre-seeded Cymbal Aerospace Brand Kit with non-destructive stale cascades.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p2-invoke",
           "label": "Run native /grill-me interview against client-brief.md & codebase",
-          "completed": true,
-          "userToggled": true
+          "completed": false
         },
         {
           "id": "p2-decisions",
           "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p2-edgecases",
           "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p2-shared",
           "label": "Confirm shared design concept (Fred Brooks alignment)",
-          "completed": true
+          "completed": false
         }
       ]
     },
@@ -360,28 +620,28 @@
       "number": 3,
       "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
       "mode": "HITL",
-      "status": "completed",
-      "notes": "Generated issues/prd.md with 5 Deep Modules (CampaignVault, GeminiStudioGateway, StudioPipelineOrchestrator, MasterTimelineAssembler, StudioWorkspaceUI), behavioral testing boundaries, and negative Out of Scope constraints.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p3-modules",
           "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p3-testing",
           "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p3-outofscope",
           "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p3-prd-written",
           "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
-          "completed": true
+          "completed": false
         }
       ]
     },
@@ -390,33 +650,33 @@
       "number": 4,
       "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
       "mode": "HITL",
-      "status": "completed",
-      "notes": "Sliced issues/prd.md into 7 end-to-end vertical tracer-bullet tickets (issues/001-*.md through issues/007-*.md) with explicit Blocked-by DAG dependencies and AFK/HITL classifications.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p4-draft",
           "label": "Draft vertical tracer-bullet slices from issues/prd.md",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p4-tracer",
           "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p4-afk-tags",
           "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p4-dag",
           "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p4-created",
           "label": "Write local markdown tickets (issues/NNN-*.md)",
-          "completed": true
+          "completed": false
         }
       ]
     },
@@ -425,33 +685,37 @@
       "number": 5,
       "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
       "mode": "AFK",
-      "status": "completed",
-      "notes": "Completed all 7 vertical tracer-bullet slices (001 through 007) via Vertical TDD across 5 Deep Modules (CampaignVault, GeminiStudioGateway, StudioPipelineOrchestrator, MasterTimelineAssembler, StudioWorkspaceUI). All 7 Vitest test suites (9 behavioral tests), TypeScript typecheck, and Vite production build pass with 0 errors; tickets moved to issues/done/.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p5-once",
           "label": "Rehearse single vertical slice iteration & observe agent",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p5-tdd",
           "label": "Verify strict vertical TDD (1 failing test RED -> minimal code GREEN -> repeat)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p5-loops",
           "label": "Verify automated feedback loops pass (tests + typecheck)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p5-commit",
           "label": "Verify structured commit & move completed ticket to issues/done/",
-          "completed": true
+          "completed": false,
+          "userToggled": true,
+          "manuallyUnchecked": true
         },
         {
           "id": "p5-afk-all",
           "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
-          "completed": true
+          "completed": false,
+          "userToggled": true,
+          "manuallyUnchecked": true
         }
       ]
     },
@@ -460,28 +724,28 @@
       "number": 6,
       "title": "Review & Live Browser QA (Native /browser + Prebuilt Critique)",
       "mode": "HITL",
-      "status": "completed",
-      "notes": "Completed fresh-context automated code review and live 6-stage browser QA on http://127.0.0.1:4190. Resolved all findings via vertical ticket 008-phase6-review-and-qa-hardening.md and archived issues/prd.md to issues/done/prd.md.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p6-review",
           "label": "Run fresh-context automated code review with pushed coding standards",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p6-manual-qa",
           "label": "Run live browser QA (Native /browser + prebuilt design-critique / chrome-devtools)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p6-qa-tickets",
           "label": "File any discovered QA bugs as new vertical tickets in issues/",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p6-archive-prd",
           "label": "Archive completed issues/prd.md into issues/done/ to prevent Doc Rot",
-          "completed": true
+          "completed": false
         }
       ]
     },
@@ -490,23 +754,23 @@
       "number": 7,
       "title": "Deep Architecture & Memory (Native /learn)",
       "mode": "HITL",
-      "status": "completed",
-      "notes": "Completed Ousterhout deep-module audit, adopted Design 3 (Caller-Optimized Stage Facade) for StudioPipelineOrchestrator in 009-refactor-deep-pipeline-orchestrator.md, and persisted architectural conventions in AGENTS.md.",
+      "status": "not_started",
+      "notes": "",
       "items": [
         {
           "id": "p7-explore",
           "label": "Scan codebase for shallow modules & seam friction",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p7-compare",
           "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "p7-rfc",
           "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
-          "completed": true
+          "completed": false
         }
       ]
     },

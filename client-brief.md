@@ -1,1 +1,1 @@
-Marketing and video generation studio powered by Gemini models like omni, nano banana etc. It brings creative briefing, storyboarding, image generation, motion video synthesis, voiceover/music scoring, and automated brand evaluation into a single studio interface.
+Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple
