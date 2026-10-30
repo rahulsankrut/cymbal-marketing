@@ -7,9 +7,12 @@ import type {
   ReferenceAnchor,
   StudioSSEEvent,
   StudioStageNumber,
+  TimelineAssemblyPlan,
+  VoicePersonaConfig,
 } from '../../shared/types.js';
 import type { CampaignVault } from '../vault/campaignVault.js';
 import type { GeminiStudioGateway } from '../gemini/geminiStudioGateway.js';
+import { MasterTimelineAssembler } from '../assembler/masterTimelineAssembler.js';
 
 export type SSEListener = (event: StudioSSEEvent) => void;
 
@@ -26,11 +29,17 @@ export interface SceneGenerationInput {
 export class StudioPipelineOrchestrator {
   private readonly vault: CampaignVault;
   private readonly gateway: GeminiStudioGateway;
+  private readonly assembler: MasterTimelineAssembler;
   private readonly listeners = new Map<string, Set<SSEListener>>();
 
-  constructor(deps: { vault: CampaignVault; gateway: GeminiStudioGateway }) {
+  constructor(deps: {
+    vault: CampaignVault;
+    gateway: GeminiStudioGateway;
+    assembler?: MasterTimelineAssembler;
+  }) {
     this.vault = deps.vault;
     this.gateway = deps.gateway;
+    this.assembler = deps.assembler || new MasterTimelineAssembler({ vault: deps.vault });
   }
 
   public subscribeEvents(campaignId: string, listener: SSEListener): () => void {
@@ -582,5 +591,200 @@ export class StudioPipelineOrchestrator {
       remediatedTake,
       evaluation: evalReport,
     };
+  }
+
+  public async runStoryboardStage(
+    campaignId: string,
+    sceneCount = 3
+  ): Promise<CampaignDetail> {
+    const campaign = await this.vault.getCampaign(campaignId);
+    const brandKit =
+      (await this.vault.getBrandKit(campaign.brandKitId)) ||
+      (await this.vault.listBrandKits())[0];
+
+    this.emitEvent({
+      campaignId: campaign.id,
+      type: 'job.started',
+      stage: 2,
+      sceneId: null,
+      modality: 'storyboard',
+      modelId: 'gemini-3.8-flash',
+      message: `Generating ${sceneCount}-scene storyboard via Gemini 3.8 Flash Structured Outputs...`,
+    });
+
+    try {
+      const result = await this.gateway.generateStoryboard(campaign, brandKit, sceneCount);
+      await this.vault.saveStoryboardScenes(campaign.id, result.scenes, 2);
+
+      this.emitEvent({
+        campaignId: campaign.id,
+        type: 'job.completed',
+        stage: 2,
+        sceneId: null,
+        modality: 'storyboard',
+        modelId: result.modelId,
+        interactionId: result.interactionId,
+        tokenUsage: result.tokenUsage,
+        latencyMs: result.latencyMs,
+        message: `Generated ${result.scenes.length} storyboard scenes.`,
+      });
+
+      return await this.vault.getCampaign(campaign.id);
+    } catch (err) {
+      this.emitEvent({
+        campaignId,
+        type: 'job.failed',
+        stage: 2,
+        sceneId: null,
+        modality: 'storyboard',
+        modelId: 'gemini-3.8-flash',
+        message: `Storyboard generation failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
+  }
+
+  public async designVoicePersonaStage(
+    campaignId: string,
+    input: {
+      displayName: string;
+      gender: 'female' | 'male' | 'neutral';
+      languageCode: string;
+      personaPrompt: string;
+    }
+  ): Promise<{ voicePersona: VoicePersonaConfig; campaign: CampaignDetail }> {
+    this.emitEvent({
+      campaignId,
+      type: 'job.started',
+      stage: 5,
+      sceneId: null,
+      modality: 'voiceover_audio',
+      modelId: 'gemini-3.8-flash-tts',
+      message: `Designing custom narrator voice persona "${input.displayName}"...`,
+    });
+
+    try {
+      const voicePersona = await this.gateway.designVoicePersona(campaignId, input);
+      const campaign = await this.vault.updateCampaignMeta(campaignId, { voicePersona });
+
+      this.emitEvent({
+        campaignId,
+        type: 'job.completed',
+        stage: 5,
+        sceneId: null,
+        modality: 'voiceover_audio',
+        modelId: 'gemini-3.8-flash-tts',
+        interactionId: voicePersona.voiceId,
+        message: `Voice persona "${voicePersona.displayName}" (${voicePersona.voiceId}) created.`,
+      });
+
+      return { voicePersona, campaign };
+    } catch (err) {
+      this.emitEvent({
+        campaignId,
+        type: 'job.failed',
+        stage: 5,
+        sceneId: null,
+        modality: 'voiceover_audio',
+        modelId: 'gemini-3.8-flash-tts',
+        message: `Voice persona design failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
+  }
+
+  public async runBrandEvaluationStage(
+    campaignId: string
+  ): Promise<{ report: BrandEvaluationReport; campaign: CampaignDetail }> {
+    const campaign = await this.vault.getCampaign(campaignId);
+    const brandKit =
+      (await this.vault.getBrandKit(campaign.brandKitId)) ||
+      (await this.vault.listBrandKits())[0];
+
+    this.emitEvent({
+      campaignId: campaign.id,
+      type: 'job.started',
+      stage: 6,
+      sceneId: null,
+      modality: 'brand_eval',
+      modelId: 'gemini-3.8-flash',
+      message:
+        'Inspecting multimodal keyframes, motion videos, and voiceovers against Cymbal Aerospace Brand Kit...',
+    });
+
+    try {
+      const report = await this.gateway.evaluateCampaignBrandCompliance(campaign, brandKit);
+      await this.vault.saveBrandEvaluation(campaign.id, report);
+
+      this.emitEvent({
+        campaignId: campaign.id,
+        type: 'job.completed',
+        stage: 6,
+        sceneId: null,
+        modality: 'brand_eval',
+        modelId: report.modelId,
+        interactionId: report.interactionId,
+        message: `Brand Evaluation complete: ${report.overallScore}/100 overall compliance score.`,
+      });
+
+      const updated = await this.vault.getCampaign(campaign.id);
+      return { report, campaign: updated };
+    } catch (err) {
+      this.emitEvent({
+        campaignId,
+        type: 'job.failed',
+        stage: 6,
+        sceneId: null,
+        modality: 'brand_eval',
+        modelId: 'gemini-3.8-flash',
+        message: `Brand Evaluation failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
+  }
+
+  public async runMasterAssemblyStage(campaignId: string): Promise<{
+    masterTake: AssetTake;
+    timelinePlan: TimelineAssemblyPlan;
+    campaign: CampaignDetail;
+  }> {
+    this.emitEvent({
+      campaignId,
+      type: 'job.started',
+      stage: 6,
+      sceneId: null,
+      modality: 'master_video',
+      modelId: 'ffmpeg-master-assembler',
+      message: 'Assembling FFmpeg Master Cut with -12dB voiceover audio ducking...',
+    });
+
+    try {
+      const result = await this.assembler.assembleMasterCut(campaignId);
+
+      this.emitEvent({
+        campaignId,
+        type: 'job.completed',
+        stage: 6,
+        sceneId: null,
+        modality: 'master_video',
+        modelId: 'ffmpeg-master-assembler',
+        interactionId: result.masterTake.interactionId,
+        message: `Master Cut (${result.masterTake.id}, ${result.timelinePlan.totalDurationSeconds}s) assembled with -12dB music ducking.`,
+      });
+
+      const campaign = await this.vault.getCampaign(campaignId);
+      return { ...result, campaign };
+    } catch (err) {
+      this.emitEvent({
+        campaignId,
+        type: 'job.failed',
+        stage: 6,
+        sceneId: null,
+        modality: 'master_video',
+        modelId: 'ffmpeg-master-assembler',
+        message: `Master Cut assembly failed: ${(err as Error).message}`,
+      });
+      throw err;
+    }
   }
 }

@@ -15,9 +15,10 @@ export interface StudioAppDependencies {
 export function createStudioApp(deps: StudioAppDependencies): Express {
   const { vault } = deps;
   const gateway = deps.gateway || new GeminiStudioGateway({ vault });
-  const orchestrator =
-    deps.orchestrator || new StudioPipelineOrchestrator({ vault, gateway });
   const assembler = deps.assembler || new MasterTimelineAssembler({ vault });
+  const orchestrator =
+    deps.orchestrator ||
+    new StudioPipelineOrchestrator({ vault, gateway, assembler });
 
   const app = express();
 
@@ -115,49 +116,10 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   // Stage 2: AI Storyboard & Script Generation + Scene CRUD
   app.post('/api/campaigns/:id/storyboard/generate', async (req, res) => {
     try {
-      const campaign = await vault.getCampaign(req.params.id);
-      const brandKit =
-        (await vault.getBrandKit(campaign.brandKitId)) || (await vault.listBrandKits())[0];
       const sceneCount = Number(req.body?.sceneCount || 3);
-
-      orchestrator.emitEvent({
-        campaignId: campaign.id,
-        type: 'job.started',
-        stage: 2,
-        sceneId: null,
-        modality: 'storyboard',
-        modelId: 'gemini-3.8-flash',
-        message: `Generating ${sceneCount}-scene storyboard via Gemini 3.8 Flash Structured Outputs...`,
-      });
-
-      const result = await gateway.generateStoryboard(campaign, brandKit, sceneCount);
-      await vault.saveStoryboardScenes(campaign.id, result.scenes, 2);
-
-      orchestrator.emitEvent({
-        campaignId: campaign.id,
-        type: 'job.completed',
-        stage: 2,
-        sceneId: null,
-        modality: 'storyboard',
-        modelId: result.modelId,
-        interactionId: result.interactionId,
-        tokenUsage: result.tokenUsage,
-        latencyMs: result.latencyMs,
-        message: `Generated ${result.scenes.length} storyboard scenes.`,
-      });
-
-      const updated = await vault.getCampaign(campaign.id);
+      const updated = await orchestrator.runStoryboardStage(req.params.id, sceneCount);
       res.json(updated);
     } catch (err) {
-      orchestrator.emitEvent({
-        campaignId: req.params.id,
-        type: 'job.failed',
-        stage: 2,
-        sceneId: null,
-        modality: 'storyboard',
-        modelId: 'gemini-3.8-flash',
-        message: `Storyboard generation failed: ${(err as Error).message}`,
-      });
       res.status(400).json({ error: (err as Error).message });
     }
   });
@@ -287,9 +249,8 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   // Stage 5: Voice Design & Lyria Music Scoring
   app.post('/api/campaigns/:id/voice-design', async (req, res) => {
     try {
-      const voicePersona = await gateway.designVoicePersona(req.params.id, req.body);
-      const campaign = await vault.updateCampaignMeta(req.params.id, { voicePersona });
-      res.json({ voicePersona, campaign });
+      const result = await orchestrator.designVoicePersonaStage(req.params.id, req.body);
+      res.json(result);
     } catch (err) {
       res.status(400).json({ error: (err as Error).message });
     }
@@ -312,46 +273,9 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   // Stage 6: Multimodal Brand Compliance Evaluation & 1-Click Auto-Fix
   app.post('/api/campaigns/:id/brand-eval', async (req, res) => {
     try {
-      const campaign = await vault.getCampaign(req.params.id);
-      const brandKit =
-        (await vault.getBrandKit(campaign.brandKitId)) || (await vault.listBrandKits())[0];
-
-      orchestrator.emitEvent({
-        campaignId: campaign.id,
-        type: 'job.started',
-        stage: 6,
-        sceneId: null,
-        modality: 'brand_eval',
-        modelId: 'gemini-3.8-flash',
-        message: 'Inspecting multimodal keyframes, motion videos, and voiceovers against Cymbal Aerospace Brand Kit...',
-      });
-
-      const report = await gateway.evaluateCampaignBrandCompliance(campaign, brandKit);
-      await vault.saveBrandEvaluation(campaign.id, report);
-
-      orchestrator.emitEvent({
-        campaignId: campaign.id,
-        type: 'job.completed',
-        stage: 6,
-        sceneId: null,
-        modality: 'brand_eval',
-        modelId: report.modelId,
-        interactionId: report.interactionId,
-        message: `Brand Evaluation complete: ${report.overallScore}/100 overall compliance score.`,
-      });
-
-      const updated = await vault.getCampaign(campaign.id);
-      res.json({ report, campaign: updated });
+      const result = await orchestrator.runBrandEvaluationStage(req.params.id);
+      res.json(result);
     } catch (err) {
-      orchestrator.emitEvent({
-        campaignId: req.params.id,
-        type: 'job.failed',
-        stage: 6,
-        sceneId: null,
-        modality: 'brand_eval',
-        modelId: 'gemini-3.8-flash',
-        message: `Brand Evaluation failed: ${(err as Error).message}`,
-      });
       res.status(400).json({ error: (err as Error).message });
     }
   });
@@ -382,13 +306,8 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
 
   app.post('/api/campaigns/:id/assemble', async (req, res) => {
     try {
-      const result = await assembler.assembleMasterCut(req.params.id);
-      const campaign = await vault.getCampaign(req.params.id);
-      res.json({
-        masterTake: result.masterTake,
-        timelinePlan: result.timelinePlan,
-        campaign,
-      });
+      const result = await orchestrator.runMasterAssemblyStage(req.params.id);
+      res.json(result);
     } catch (err) {
       res.status(400).json({ error: (err as Error).message });
     }

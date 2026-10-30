@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvv00qd2-1kr7",
   "activeIterationTitle": "Iteration #1: Initial Build",
   "brief": "Marketing and video generation studio powered by Gemini models like omni, nano banana etc. It brings creative briefing, storyboarding, image generation, motion video synthesis, voiceover/music scoring, and automated brand evaluation into a single studio interface.",
-  "updatedAt": "2026-10-30T19:41:46.386Z",
+  "updatedAt": "2026-10-30T21:41:27.517Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -47,8 +47,8 @@
               "id": "p1-prototype",
               "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit)",
               "completed": false,
-              "userToggled": false,
-              "manuallyUnchecked": false
+              "userToggled": true,
+              "manuallyUnchecked": true
             }
           ]
         },
@@ -218,23 +218,23 @@
           "number": 7,
           "title": "Deep Architecture & Memory (Native /learn)",
           "mode": "HITL",
-          "status": "not_started",
-          "notes": "",
+          "status": "completed",
+          "notes": "Completed Ousterhout deep-module audit, adopted Design 3 (Caller-Optimized Stage Facade) for StudioPipelineOrchestrator in 009-refactor-deep-pipeline-orchestrator.md, and persisted architectural conventions in AGENTS.md.",
           "items": [
             {
               "id": "p7-explore",
               "label": "Scan codebase for shallow modules & seam friction",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p7-compare",
               "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p7-rfc",
               "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
-              "completed": false
+              "completed": true
             }
           ]
         }
@@ -275,8 +275,8 @@
           "id": "p1-prototype",
           "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit)",
           "completed": false,
-          "userToggled": false,
-          "manuallyUnchecked": false
+          "userToggled": true,
+          "manuallyUnchecked": true
         }
       ]
     },
@@ -446,23 +446,23 @@
       "number": 7,
       "title": "Deep Architecture & Memory (Native /learn)",
       "mode": "HITL",
-      "status": "not_started",
-      "notes": "",
+      "status": "completed",
+      "notes": "Completed Ousterhout deep-module audit, adopted Design 3 (Caller-Optimized Stage Facade) for StudioPipelineOrchestrator in 009-refactor-deep-pipeline-orchestrator.md, and persisted architectural conventions in AGENTS.md.",
       "items": [
         {
           "id": "p7-explore",
           "label": "Scan codebase for shallow modules & seam friction",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p7-compare",
           "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p7-rfc",
           "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
-          "completed": false
+          "completed": true
         }
       ]
     }
