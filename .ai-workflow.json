@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvv00qd2-1kr7",
   "activeIterationTitle": "Iteration #1: Initial Build",
   "brief": "Marketing and video generation studio powered by Gemini models like omni, nano banana etc. It brings creative briefing, storyboarding, image generation, motion video synthesis, voiceover/music scoring, and automated brand evaluation into a single studio interface.",
-  "updatedAt": "2026-10-30T21:41:27.517Z",
+  "updatedAt": "2026-10-30T22:27:37.569Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -20,7 +20,7 @@
           "title": "Idea, Research & Prototyping",
           "mode": "HITL",
           "status": "completed",
-          "notes": "",
+          "notes": "Synthesized research.md across 4 cloned Google GenMedia repos (genmedia-creative-studio, dreamboard, storycraft, vigenair), 6 internal Ad Marketing Skills, and live Vertex AI ADC (vertex-ai-demos-468803) endpoint verification.",
           "items": [
             {
               "id": "p1-brief",
@@ -37,15 +37,22 @@
               "manuallyUnchecked": false
             },
             {
+              "id": "p1-credentials",
+              "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+              "completed": true,
+              "userToggled": true,
+              "manuallyUnchecked": false
+            },
+            {
               "id": "p1-research",
-              "label": "Cache complex codebase/API exploration in research.md (optional)",
-              "completed": false,
-              "userToggled": false,
+              "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+              "completed": true,
+              "userToggled": true,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-prototype",
-              "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit)",
+              "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
               "completed": false,
               "userToggled": true,
               "manuallyUnchecked": true
@@ -68,12 +75,12 @@
             },
             {
               "id": "p2-decisions",
-              "label": "Resolve decision tree dependencies one by one",
+              "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
               "completed": true
             },
             {
               "id": "p2-edgecases",
-              "label": "Settle nasty edge cases (backfills, permissions, progression formulas)",
+              "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
               "completed": true
             },
             {
@@ -93,17 +100,17 @@
           "items": [
             {
               "id": "p3-modules",
-              "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
+              "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
               "completed": true
             },
             {
               "id": "p3-testing",
-              "label": "Confirm behavioral testing decisions (test public interfaces, not internals)",
+              "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
               "completed": true
             },
             {
               "id": "p3-outofscope",
-              "label": "Verify Out of Scope section records negative decisions from /grill-me",
+              "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
               "completed": true
             },
             {
@@ -237,6 +244,36 @@
               "completed": true
             }
           ]
+        },
+        {
+          "id": "phase-8",
+          "number": 8,
+          "title": "Deploy to Dev Environment (Google Cloud Project)",
+          "mode": "HITL",
+          "status": "not_started",
+          "notes": "",
+          "items": [
+            {
+              "id": "p8-gcp-project",
+              "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
+              "completed": false
+            },
+            {
+              "id": "p8-apis-secrets",
+              "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
+              "completed": false
+            },
+            {
+              "id": "p8-deploy",
+              "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+              "completed": false
+            },
+            {
+              "id": "p8-smoke-test",
+              "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+              "completed": false
+            }
+          ]
         }
       ]
     }
@@ -248,7 +285,7 @@
       "title": "Idea, Research & Prototyping",
       "mode": "HITL",
       "status": "completed",
-      "notes": "",
+      "notes": "Synthesized research.md across 4 cloned Google GenMedia repos (genmedia-creative-studio, dreamboard, storycraft, vigenair), 6 internal Ad Marketing Skills, and live Vertex AI ADC (vertex-ai-demos-468803) endpoint verification.",
       "items": [
         {
           "id": "p1-brief",
@@ -265,15 +302,22 @@
           "manuallyUnchecked": false
         },
         {
+          "id": "p1-credentials",
+          "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+          "completed": true,
+          "userToggled": true,
+          "manuallyUnchecked": false
+        },
+        {
           "id": "p1-research",
-          "label": "Cache complex codebase/API exploration in research.md (optional)",
-          "completed": false,
-          "userToggled": false,
+          "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+          "completed": true,
+          "userToggled": true,
           "manuallyUnchecked": false
         },
         {
           "id": "p1-prototype",
-          "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit)",
+          "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
           "completed": false,
           "userToggled": true,
           "manuallyUnchecked": true
@@ -296,12 +340,12 @@
         },
         {
           "id": "p2-decisions",
-          "label": "Resolve decision tree dependencies one by one",
+          "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
           "completed": true
         },
         {
           "id": "p2-edgecases",
-          "label": "Settle nasty edge cases (backfills, permissions, progression formulas)",
+          "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
           "completed": true
         },
         {
@@ -321,17 +365,17 @@
       "items": [
         {
           "id": "p3-modules",
-          "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
+          "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
           "completed": true
         },
         {
           "id": "p3-testing",
-          "label": "Confirm behavioral testing decisions (test public interfaces, not internals)",
+          "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
           "completed": true
         },
         {
           "id": "p3-outofscope",
-          "label": "Verify Out of Scope section records negative decisions from /grill-me",
+          "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
           "completed": true
         },
         {
@@ -463,6 +507,36 @@
           "id": "p7-rfc",
           "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
           "completed": true
+        }
+      ]
+    },
+    {
+      "id": "phase-8",
+      "number": 8,
+      "title": "Deploy to Dev Environment (Google Cloud Project)",
+      "mode": "HITL",
+      "status": "not_started",
+      "notes": "",
+      "items": [
+        {
+          "id": "p8-gcp-project",
+          "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
+          "completed": false
+        },
+        {
+          "id": "p8-apis-secrets",
+          "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
+          "completed": false
+        },
+        {
+          "id": "p8-deploy",
+          "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+          "completed": false
+        },
+        {
+          "id": "p8-smoke-test",
+          "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+          "completed": false
         }
       ]
     }
