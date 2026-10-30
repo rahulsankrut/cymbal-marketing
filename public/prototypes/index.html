@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en" style="color-scheme: dark;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cymbal Aerospace Studio — 3 Material 3 UX Simplification Prototypes</title>
+
+  <!-- Importmap for @material/web, Lit, and dependencies -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@material/web/": "https://unpkg.com/@material/web@nightly/",
+      "tslib": "https://unpkg.com/tslib/tslib.es6.js",
+      "lit": "https://unpkg.com/lit",
+      "lit/": "https://unpkg.com/lit/",
+      "@lit/": "https://unpkg.com/@lit/",
+      "@lit-labs/": "https://unpkg.com/@lit-labs/",
+      "lit-html": "https://unpkg.com/lit-html",
+      "lit-html/": "https://unpkg.com/lit-html/",
+      "lit-element/": "https://unpkg.com/lit-element/",
+      "safevalues/dom": "https://unpkg.com/safevalues/dist/mjs/dom/index.js"
+    }
+  }
+  </script>
+
+  <!-- Tailwind CSS setup -->
+  <script type="module" src="https://unpkg.com/@tailwindcss/browser"></script>
+  <style type="text/tailwindcss">
+    @layer properties, theme, base, md, components, utilities;
+  </style>
+  <script type="module">
+    const response = await fetch('https://unpkg.com/@material/web@nightly/labs/gb/styles/tailwind.css');
+    const style = document.createElement('style');
+    style.type = 'text/tailwindcss';
+    style.textContent = await response.text();
+    document.head.appendChild(style);
+  </script>
+
+  <!-- Design system tokens & stylesheet bindings -->
+  <link rel="stylesheet" href="./design-system-bindings.css">
+
+  <!-- gBreeze Component Imports -->
+  <script type="module">
+    import '@material/web/labs/gb/components/button/md-gb-button.js';
+    import '@material/web/labs/gb/components/iconbutton/md-gb-icon-button.js';
+    import '@material/web/labs/gb/components/card/md-gb-card.js';
+    import '@material/web/labs/gb/components/list/md-gb-list.js';
+    import '@material/web/labs/gb/components/list/md-gb-list-item.js';
+    import '@material/web/labs/gb/styles/icon/md-gb-icon.js';
+  </script>
+
+  <!-- Standard Material Web Component Fallbacks -->
+  <script type="module">
+    import '@material/web/textfield/outlined-text-field.js';
+    import '@material/web/dialog/dialog.js';
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      background-color: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      margin: 0;
+      font: var(--md-sys-typescale-body-medium);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .proto-switcher-bar {
+      background-color: var(--md-sys-color-surface-container-highest);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      padding: var(--md-sys-space-150) var(--md-sys-space-300);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--md-sys-space-200);
+    }
+    .pill-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--md-sys-space-50);
+      background-color: var(--md-sys-color-surface-container-low);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: var(--md-sys-shape-corner-full);
+      padding: var(--md-sys-space-50);
+    }
+    .pill-tab {
+      border: none;
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      font: var(--md-sys-typescale-label-large);
+      padding: var(--md-sys-space-100) var(--md-sys-space-250);
+      border-radius: var(--md-sys-shape-corner-full);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--md-sys-space-100);
+      transition: all 0.2s ease;
+    }
+    .pill-tab.active {
+      background-color: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+    .pill-tab:not(.active):hover {
+      background-color: var(--md-sys-color-surface-container-high);
+      color: var(--md-sys-color-on-surface);
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: var(--md-sys-space-250);
+      height: var(--md-sys-space-250);
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      font: var(--md-sys-typescale-label-small);
+    }
+    .media-frame {
+      aspect-ratio: 16 / 9;
+      border-radius: var(--md-sys-shape-corner-md);
+      background: linear-gradient(135deg, var(--md-sys-color-surface-container-highest), var(--md-sys-color-primary-container));
+      border: 1px solid var(--md-sys-color-outline-variant);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--md-sys-space-200);
+      text-align: center;
+    }
+    .media-overlay-actions {
+      position: absolute;
+      top: var(--md-sys-space-150);
+      right: var(--md-sys-space-150);
+      display: flex;
+      gap: var(--md-sys-space-100);
+    }
+    .chip-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--md-sys-space-50);
+      padding: var(--md-sys-space-50) var(--md-sys-space-150);
+      border-radius: var(--md-sys-shape-corner-full);
+      background-color: var(--md-sys-color-secondary-container);
+      color: var(--md-sys-color-on-secondary-container);
+      font: var(--md-sys-typescale-label-small);
+    }
+    .chip-tag.tertiary {
+      background-color: var(--md-sys-color-tertiary-container);
+      color: var(--md-sys-color-on-tertiary-container);
+    }
+    .clean-input, .clean-textarea {
+      width: 100%;
+      background-color: var(--md-sys-color-surface-container-lowest);
+      color: var(--md-sys-color-on-surface);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: var(--md-sys-shape-corner-sm);
+      padding: var(--md-sys-space-150) var(--md-sys-space-200);
+      font: var(--md-sys-typescale-body-medium);
+    }
+    .hidden-view {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP PROTOTYPE EVALUATION SWITCHER BAR -->
+  <header class="proto-switcher-bar" data-testid="prototype-switcher-bar">
+    <div style="display: flex; align-items: center; gap: var(--md-sys-space-150);">
+      <md-gb-icon style="--md-icon-size: 24px; color: var(--md-sys-color-primary);">rocket_launch</md-gb-icon>
+      <div>
+        <div style="font: var(--md-sys-typescale-label-small); color: var(--md-sys-color-primary);">
+          ITERATION #2 · THROWAWAY UX PROTOTYPES (GOOGLE MATERIAL 3)
+        </div>
+        <div style="font: var(--md-sys-typescale-title-medium); color: var(--md-sys-color-on-surface);">
+          Cymbal Aerospace Studio — UI/UX Simplification Explorations
+        </div>
+      </div>
+    </div>
+
+    <!-- Clickable Prototype Switcher -->
+    <div class="pill-nav" role="tablist" aria-label="Select UX Prototype Direction">
+      <button
+        type="button"
+        id="btn-proto-a"
+        data-testid="select-proto-a"
+        class="pill-tab active"
+        onclick="switchPrototype('a')"
+      >
+        <md-gb-icon style="--md-icon-size: 18px;">view_carousel</md-gb-icon>
+        <span>Option A: 4-Step Storycraft Flow (Recommended)</span>
+      </button>
+      <button
+        type="button"
+        id="btn-proto-b"
+        data-testid="select-proto-b"
+        class="pill-tab"
+        onclick="switchPrototype('b')"
+      >
+        <md-gb-icon style="--md-icon-size: 18px;">dock_to_left</md-gb-icon>
+        <span>Option B: Single Canvas + Right Inspector</span>
+      </button>
+      <button
+        type="button"
+        id="btn-proto-c"
+        data-testid="select-proto-c"
+        class="pill-tab"
+        onclick="switchPrototype('c')"
+      >
+        <md-gb-icon style="--md-icon-size: 18px;">auto_awesome</md-gb-icon>
+        <span>Option C: Guided Focus Wizard</span>
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: var(--md-sys-space-100);">
+      <md-gb-button color="outlined" onclick="toggleTheme()" data-testid="toggle-theme-btn">
+        <md-gb-icon slot="icon" style="--md-icon-size: 18px;">contrast</md-gb-icon>
+        Light / Dark
+      </md-gb-button>
+      <a href="/" style="text-decoration: none;">
+        <md-gb-button color="tonal">
+          <md-gb-icon slot="icon" style="--md-icon-size: 18px;">arrow_back</md-gb-icon>
+          Live App
+        </md-gb-button>
+      </a>
+    </div>
+  </header>
+
+  <!-- ===================================================================== -->
+  <!-- PROTOTYPE A: STORYCRAFT 4-STEP PILL FLOW + MODAL SCENE INSPECTOR       -->
+  <!-- ===================================================================== -->
+  <section id="proto-a" data-testid="view-proto-a" style="flex: 1; padding: var(--md-sys-space-300); max-width: 1280px; width: 100%; margin: 0 auto;">
+    <!-- Rationale Banner -->
+    <md-gb-card color="tertiary-container" style="padding: var(--md-sys-space-200) var(--md-sys-space-300); margin-bottom: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-md);">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--md-sys-space-200);">
+        <div>
+          <div style="font: var(--md-sys-typescale-title-small); color: var(--md-sys-color-on-tertiary-container);">
+            Prototype A — 4-Step Storycraft Flow + On-Demand Scene Modal (Recommended)
+          </div>
+          <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-tertiary-container);">
+            Merges Keyframes & Motion into one clean Visual Storyboard tab, replaces 12 open textareas with visual-first cards, and opens Prompt/Magic-Edit details in a focused modal only when clicked.
+          </div>
+        </div>
+        <span class="chip-tag">80% Less Visual Clutter</span>
+      </div>
+    </md-gb-card>
+
+    <!-- Compact Centered 4-Step Pill Navigation (like Storycraft top-nav.tsx) -->
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--md-sys-space-200); margin-bottom: var(--md-sys-space-300);">
+      <div>
+        <h1 style="font: var(--md-sys-typescale-headline-small); margin: 0;">
+          CX-900 Supersonic Avionics Launch
+        </h1>
+        <span style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+          Brand Kit: Cymbal Global Standard · 3 Scenes · 18s Total
+        </span>
+      </div>
+
+      <nav class="pill-nav" aria-label="Prototype A 4-Step Pipeline">
+        <button type="button" id="pa-tab-1" class="pill-tab" onclick="switchProtoAStep(1)">
+          <span class="step-badge">1</span>
+          <span>Brief</span>
+        </button>
+        <button type="button" id="pa-tab-2" class="pill-tab active" onclick="switchProtoAStep(2)">
+          <span class="step-badge">2</span>
+          <span>Storyboard & Visuals</span>
+        </button>
+        <button type="button" id="pa-tab-3" class="pill-tab" onclick="switchProtoAStep(3)">
+          <span class="step-badge">3</span>
+          <span>Voice & Soundtrack</span>
+        </button>
+        <button type="button" id="pa-tab-4" class="pill-tab" onclick="switchProtoAStep(4)">
+          <span class="step-badge">4</span>
+          <span>Final Cut & Review</span>
+        </button>
+      </nav>
+
+      <md-gb-button color="filled" onclick="switchProtoAStep(4)">
+        <md-gb-icon slot="icon" style="--md-icon-size: 18px;">movie</md-gb-icon>
+        Preview Final Cut
+      </md-gb-button>
+    </div>
+
+    <!-- STEP 1: CALM CREATIVE BRIEF -->
+    <div id="pa-step-1" class="hidden-view" style="max-width: 820px; margin: 0 auto;">
+      <md-gb-card color="surface-container" style="padding: var(--md-sys-space-400); border-radius: var(--md-sys-shape-corner-lg);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--md-sys-space-200);">
+          <h2 style="font: var(--md-sys-typescale-title-large); margin: 0;">1. Campaign Brief</h2>
+          <div style="display: flex; gap: var(--md-sys-space-100);">
+            <span class="chip-tag">Preset: Supersonic Avionics</span>
+            <span class="chip-tag tertiary">Brand Rules Active (5 Colors)</span>
+          </div>
+        </div>
+        <p style="font: var(--md-sys-typescale-body-medium); color: var(--md-sys-color-on-surface-variant); margin-bottom: var(--md-sys-space-300);">
+          Describe your campaign pitch below, or pick a 1-click preset. Brand guardrails are applied automatically behind the scenes.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+          <div>
+            <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">Campaign Pitch</label>
+            <textarea class="clean-textarea" rows="3">Launch keynote film for the CX-900 Supersonic Flight Deck showcasing triple-redundant optical HUD telemetry, laminar winglet aerodynamics at Mach 2.2, and 42% lower acoustic footprint.</textarea>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: var(--md-sys-space-100);">
+            <md-gb-button color="tonal" onclick="toggleBrandDrawerA()">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">palette</md-gb-icon>
+              View Brand Guardrails (Optional)
+            </md-gb-button>
+            <md-gb-button color="filled" onclick="switchProtoAStep(2)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">auto_awesome</md-gb-icon>
+              Generate 3-Scene Storyboard →
+            </md-gb-button>
+          </div>
+
+          <div id="pa-brand-drawer" class="hidden-view" style="padding: var(--md-sys-space-200); background-color: var(--md-sys-color-surface-container-low); border-radius: var(--md-sys-shape-corner-md);">
+            <div style="font: var(--md-sys-typescale-label-medium); margin-bottom: var(--md-sys-space-100);">
+              Cymbal Aerospace Guardrails (Collapsed by default to prevent clutter)
+            </div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              • Livery: Stratosphere Obsidian, Titanium Silver, Mach Cyan · No weaponized military imagery · Quantitative claims must match telemetry spec.
+            </div>
+          </div>
+        </div>
+      </md-gb-card>
+    </div>
+
+    <!-- STEP 2: UNIFIED VISUAL STORYBOARD (DEFAULT ACTIVE IN PROTO A) -->
+    <div id="pa-step-2">
+      <!-- Action Toolbar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--md-sys-space-250); background-color: var(--md-sys-color-surface-container); padding: var(--md-sys-space-150) var(--md-sys-space-250); border-radius: var(--md-sys-shape-corner-md);">
+        <div style="display: flex; align-items: center; gap: var(--md-sys-space-150);">
+          <span style="font: var(--md-sys-typescale-label-large);">Card Preview Mode:</span>
+          <div class="pill-nav">
+            <button type="button" id="pa-mode-img" class="pill-tab active" onclick="setProtoAMediaMode('image')">
+              <md-gb-icon style="--md-icon-size: 16px;">image</md-gb-icon>
+              <span>Keyframes</span>
+            </button>
+            <button type="button" id="pa-mode-vid" class="pill-tab" onclick="setProtoAMediaMode('video')">
+              <md-gb-icon style="--md-icon-size: 16px;">videocam</md-gb-icon>
+              <span>Motion Clips</span>
+            </button>
+          </div>
+        </div>
+        <div style="display: flex; gap: var(--md-sys-space-150);">
+          <md-gb-button color="tonal">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">bolt</md-gb-icon>
+            Generate All Visuals
+          </md-gb-button>
+          <md-gb-button color="outlined" onclick="openSceneInspector(1)">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">add</md-gb-icon>
+            Add Scene
+          </md-gb-button>
+        </div>
+      </div>
+
+      <!-- 3 Clean Visual-First Scene Cards (Zero Open Textareas!) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--md-sys-space-300);">
+        <!-- Scene 1 Card -->
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-250); border-radius: var(--md-sys-shape-corner-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+          <div class="media-frame">
+            <div class="media-overlay-actions">
+              <span class="chip-tag">HOOK · 6s</span>
+            </div>
+            <md-gb-icon style="--md-icon-size: 40px; color: var(--md-sys-color-primary);">flight_takeoff</md-gb-icon>
+            <div class="pa-media-label" style="font: var(--md-sys-typescale-label-medium); margin-top: var(--md-sys-space-100);">
+              Scene 01 Keyframe Ready
+            </div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              Stratosphere Obsidian CX-900 nose cone breaking dawn cloud deck
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div style="font: var(--md-sys-typescale-title-medium);">01. Dawn Stratosphere Climb</div>
+              <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+                "At sixty thousand feet, clarity is everything."
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--md-sys-space-100); border-top: 1px solid var(--md-sys-color-outline-variant);">
+            <md-gb-button color="tonal" onclick="openSceneInspector(1)" data-testid="open-inspector-scene-1">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">edit</md-gb-icon>
+              Edit Scene & Prompts
+            </md-gb-button>
+            <md-gb-button color="outlined" onclick="openSceneInspector(1)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">auto_fix_high</md-gb-icon>
+              Magic Edit
+            </md-gb-button>
+          </div>
+        </md-gb-card>
+
+        <!-- Scene 2 Card -->
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-250); border-radius: var(--md-sys-shape-corner-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+          <div class="media-frame">
+            <div class="media-overlay-actions">
+              <span class="chip-tag">PROOF · 6s</span>
+            </div>
+            <md-gb-icon style="--md-icon-size: 40px; color: var(--md-sys-color-primary);">speed</md-gb-icon>
+            <div class="pa-media-label" style="font: var(--md-sys-typescale-label-medium); margin-top: var(--md-sys-space-100);">
+              Scene 02 Keyframe Ready
+            </div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              Glass cockpit holographic HUD locking Mach 2.2 laminar flow
+            </div>
+          </div>
+
+          <div>
+            <div style="font: var(--md-sys-typescale-title-medium);">02. Optical HUD Telemetry Lock</div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              "Triple-redundant optical sensors map every thermal current."
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--md-sys-space-100); border-top: 1px solid var(--md-sys-color-outline-variant);">
+            <md-gb-button color="tonal" onclick="openSceneInspector(2)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">edit</md-gb-icon>
+              Edit Scene & Prompts
+            </md-gb-button>
+            <md-gb-button color="outlined" onclick="openSceneInspector(2)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">auto_fix_high</md-gb-icon>
+              Magic Edit
+            </md-gb-button>
+          </div>
+        </md-gb-card>
+
+        <!-- Scene 3 Card -->
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-250); border-radius: var(--md-sys-shape-corner-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+          <div class="media-frame">
+            <div class="media-overlay-actions">
+              <span class="chip-tag">CTA · 6s</span>
+            </div>
+            <md-gb-icon style="--md-icon-size: 40px; color: var(--md-sys-color-primary);">public</md-gb-icon>
+            <div class="pa-media-label" style="font: var(--md-sys-typescale-label-medium); margin-top: var(--md-sys-space-100);">
+              Scene 03 Keyframe Ready
+            </div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              Adaptive morphing winglet banking over orbital horizon
+            </div>
+          </div>
+
+          <div>
+            <div style="font: var(--md-sys-typescale-title-medium);">03. Mach 2.2 Horizon Finale</div>
+            <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              "Cymbal Aerospace. Precision for the next century of flight."
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: var(--md-sys-space-100); border-top: 1px solid var(--md-sys-color-outline-variant);">
+            <md-gb-button color="tonal" onclick="openSceneInspector(3)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">edit</md-gb-icon>
+              Edit Scene & Prompts
+            </md-gb-button>
+            <md-gb-button color="outlined" onclick="openSceneInspector(3)">
+              <md-gb-icon slot="icon" style="--md-icon-size: 18px;">auto_fix_high</md-gb-icon>
+              Magic Edit
+            </md-gb-button>
+          </div>
+        </md-gb-card>
+      </div>
+    </div>
+
+    <!-- STEP 3: CALM VOICE & SOUNDTRACK -->
+    <div id="pa-step-3" class="hidden-view" style="max-width: 900px; margin: 0 auto;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--md-sys-space-300);">
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-lg);">
+          <h3 style="font: var(--md-sys-typescale-title-large); margin-top: 0;">Narrator Voice Persona</h3>
+          <p style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+            Commander Elena Vance (Warm, authoritative test pilot)
+          </p>
+          <md-gb-button color="filled" style="margin-top: var(--md-sys-space-200);">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">record_voice_over</md-gb-icon>
+            Generate All 3 Scene Voiceovers
+          </md-gb-button>
+        </md-gb-card>
+
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-lg);">
+          <h3 style="font: var(--md-sys-typescale-title-large); margin-top: 0;">Instrumental Score (Lyria)</h3>
+          <p style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+            Warm analog synth pulse with orchestral strings (-12dB auto-ducking enabled)
+          </p>
+          <md-gb-button color="filled" style="margin-top: var(--md-sys-space-200);">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">music_note</md-gb-icon>
+            Compose Campaign Soundtrack
+          </md-gb-button>
+        </md-gb-card>
+      </div>
+    </div>
+
+    <!-- STEP 4: CALM FINAL CUT & BRAND CHECK -->
+    <div id="pa-step-4" class="hidden-view" style="max-width: 920px; margin: 0 auto;">
+      <md-gb-card color="surface-container" style="padding: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-lg);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--md-sys-space-200);">
+          <div>
+            <h2 style="font: var(--md-sys-typescale-title-large); margin: 0;">Final Master Cut & Brand Scorecard</h2>
+            <span style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+              18s Master MP4 · -12dB Voiceover Ducking Applied · Technical FFmpeg details hidden
+            </span>
+          </div>
+          <span class="chip-tag">Brand Score: 96 / 100</span>
+        </div>
+        <div class="media-frame" style="margin-bottom: var(--md-sys-space-200);">
+          <md-gb-icon style="--md-icon-size: 48px; color: var(--md-sys-color-primary);">play_circle</md-gb-icon>
+          <div style="font: var(--md-sys-typescale-title-medium); margin-top: var(--md-sys-space-100);">
+            CX-900_Master_Cut.mp4 (16:9 Broadcast Master)
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <md-gb-button color="tonal">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">verified</md-gb-icon>
+            Run Brand Compliance Check
+          </md-gb-button>
+          <md-gb-button color="filled">
+            <md-gb-icon slot="icon" style="--md-icon-size: 18px;">download</md-gb-icon>
+            Download Master .MP4
+          </md-gb-button>
+        </div>
+      </md-gb-card>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PROTOTYPE B: SINGLE-SCREEN FILMSTRIP + RIGHT SLIDE-OVER INSPECTOR     -->
+  <!-- ===================================================================== -->
+  <section id="proto-b" data-testid="view-proto-b" class="hidden-view" style="flex: 1; padding: var(--md-sys-space-300); max-width: 1440px; width: 100%; margin: 0 auto;">
+    <md-gb-card color="tertiary-container" style="padding: var(--md-sys-space-200) var(--md-sys-space-300); margin-bottom: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-md);">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--md-sys-space-200);">
+        <div>
+          <div style="font: var(--md-sys-typescale-title-small); color: var(--md-sys-color-on-tertiary-container);">
+            Prototype B — Single-Screen Filmstrip + Contextual Right Inspector
+          </div>
+          <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-tertiary-container);">
+            Zero stage tabs! Click any scene on the left visual canvas to inspect its Visual, Motion, or Voice settings in a single right-hand drawer.
+          </div>
+        </div>
+        <span class="chip-tag">Zero Page Switching</span>
+      </div>
+    </md-gb-card>
+
+    <div style="display: grid; grid-template-columns: 1fr 380px; gap: var(--md-sys-space-300); align-items: start;">
+      <!-- Left Visual Canvas: Main Stage Preview + 3-Scene Filmstrip -->
+      <div style="display: flex; flex-direction: column; gap: var(--md-sys-space-250);">
+        <md-gb-card color="surface-container" style="padding: var(--md-sys-space-250); border-radius: var(--md-sys-shape-corner-lg);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--md-sys-space-150);">
+            <span id="pb-stage-title" style="font: var(--md-sys-typescale-title-medium);">
+              Active Selection: Scene 01 — Dawn Stratosphere Climb
+            </span>
+            <span class="chip-tag">16:9 Master Viewport</span>
+          </div>
+          <div class="media-frame" style="max-height: 360px;">
+            <md-gb-icon style="--md-icon-size: 56px; color: var(--md-sys-color-primary);">smart_display</md-gb-icon>
+            <div id="pb-stage-caption" style="font: var(--md-sys-typescale-title-medium); margin-top: var(--md-sys-space-100);">
+              Previewing Scene 01 Keyframe + Motion + Voiceover
+            </div>
+          </div>
+        </md-gb-card>
+
+        <!-- Bottom 3-Scene Filmstrip -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--md-sys-space-200);">
+          <md-gb-card color="primary-container" id="pb-card-1" onclick="selectProtoBScene(1)" style="padding: var(--md-sys-space-200); border-radius: var(--md-sys-shape-corner-md); cursor: pointer;">
+            <div style="font: var(--md-sys-typescale-label-small);">SCENE 01 · 6s</div>
+            <div style="font: var(--md-sys-typescale-title-small); margin-top: var(--md-sys-space-50);">Dawn Stratosphere Climb</div>
+          </md-gb-card>
+          <md-gb-card color="surface-container" id="pb-card-2" onclick="selectProtoBScene(2)" style="padding: var(--md-sys-space-200); border-radius: var(--md-sys-shape-corner-md); cursor: pointer;">
+            <div style="font: var(--md-sys-typescale-label-small);">SCENE 02 · 6s</div>
+            <div style="font: var(--md-sys-typescale-title-small); margin-top: var(--md-sys-space-50);">Optical HUD Telemetry Lock</div>
+          </md-gb-card>
+          <md-gb-card color="surface-container" id="pb-card-3" onclick="selectProtoBScene(3)" style="padding: var(--md-sys-space-200); border-radius: var(--md-sys-shape-corner-md); cursor: pointer;">
+            <div style="font: var(--md-sys-typescale-label-small);">SCENE 03 · 6s</div>
+            <div style="font: var(--md-sys-typescale-title-small); margin-top: var(--md-sys-space-50);">Mach 2.2 Horizon Finale</div>
+          </md-gb-card>
+        </div>
+      </div>
+
+      <!-- Right Contextual Slide-Over Inspector -->
+      <md-gb-card color="surface-container-high" style="padding: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <h3 id="pb-inspector-header" style="font: var(--md-sys-typescale-title-medium); margin: 0;">
+            Scene 01 Inspector
+          </h3>
+          <span class="chip-tag">Synced</span>
+        </div>
+
+        <div>
+          <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+            Spoken Narration Line
+          </label>
+          <textarea id="pb-vo-input" class="clean-textarea" rows="2">At sixty thousand feet, clarity is everything.</textarea>
+        </div>
+
+        <div>
+          <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+            Visual & Motion Prompt
+          </label>
+          <textarea id="pb-prompt-input" class="clean-textarea" rows="3">Stratosphere Obsidian CX-900 breaking through golden-hour cloud deck, 35mm anamorphic tracking shot.</textarea>
+        </div>
+
+        <md-gb-button color="filled">
+          <md-gb-icon slot="icon" style="--md-icon-size: 18px;">refresh</md-gb-icon>
+          Update Scene Assets
+        </md-gb-button>
+      </md-gb-card>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PROTOTYPE C: GUIDED FOCUS WIZARD (ONE CARD AT A TIME CO-PILOT)        -->
+  <!-- ===================================================================== -->
+  <section id="proto-c" data-testid="view-proto-c" class="hidden-view" style="flex: 1; padding: var(--md-sys-space-400); max-width: 760px; width: 100%; margin: 0 auto;">
+    <md-gb-card color="tertiary-container" style="padding: var(--md-sys-space-200) var(--md-sys-space-300); margin-bottom: var(--md-sys-space-300); border-radius: var(--md-sys-shape-corner-md);">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--md-sys-space-200);">
+        <div>
+          <div style="font: var(--md-sys-typescale-title-small); color: var(--md-sys-color-on-tertiary-container);">
+            Prototype C — Guided Focus Wizard (One Card at a Time)
+          </div>
+          <div style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-tertiary-container);">
+            Maximum simplicity: shows only one decision card at a time with a conversational command bar. Ideal for executive users who want a 3-click guided experience.
+          </div>
+        </div>
+        <span class="chip-tag">Ultra-Minimal</span>
+      </div>
+    </md-gb-card>
+
+    <md-gb-card color="surface-container" style="padding: var(--md-sys-space-400); border-radius: var(--md-sys-shape-corner-xl); display: flex; flex-direction: column; gap: var(--md-sys-space-250);">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="chip-tag" id="pc-step-indicator">Wizard Step 1 of 3 · Scene Approval</span>
+        <span style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant);">
+          CX-900 Supersonic Avionics
+        </span>
+      </div>
+
+      <h2 id="pc-wizard-title" style="font: var(--md-sys-typescale-headline-small); margin: 0;">
+        Scene 01: Dawn Stratosphere Climb
+      </h2>
+
+      <div class="media-frame">
+        <md-gb-icon style="--md-icon-size: 48px; color: var(--md-sys-color-primary);">auto_videocam</md-gb-icon>
+        <div style="font: var(--md-sys-typescale-title-medium); margin-top: var(--md-sys-space-100);">
+          "At sixty thousand feet, clarity is everything."
+        </div>
+      </div>
+
+      <!-- Single Conversational Command Input -->
+      <div style="display: flex; gap: var(--md-sys-space-150);">
+        <input
+          type="text"
+          class="clean-input"
+          placeholder="Ask Gemini to adjust this scene (e.g., 'Make the lighting warmer sunset')..."
+        />
+        <md-gb-button color="tonal">Refine</md-gb-button>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: var(--md-sys-space-150); border-top: 1px solid var(--md-sys-color-outline-variant);">
+        <md-gb-button color="outlined" onclick="stepWizardC(-1)">← Previous</md-gb-button>
+        <md-gb-button color="filled" onclick="stepWizardC(1)" data-testid="wizard-next-btn">
+          Approve & Next Scene →
+        </md-gb-button>
+      </div>
+    </md-gb-card>
+  </section>
+
+  <!-- ON-DEMAND SCENE INSPECTOR DIALOG (Used by Prototype A to hide form clutter) -->
+  <md-dialog id="scene-inspector-dialog" style="max-width: 640px; width: 92vw;">
+    <div slot="headline" id="dialog-scene-title">Edit Scene 01 — Prompts & Magic Edit</div>
+    <form slot="content" id="scene-dialog-form" method="dialog" style="display: flex; flex-direction: column; gap: var(--md-sys-space-200);">
+      <p style="font: var(--md-sys-typescale-body-small); color: var(--md-sys-color-on-surface-variant); margin: 0;">
+        Progressive Disclosure: Prompts, Camera Directives, and Take History live inside this focused modal so the main Storyboard Canvas stays clean.
+      </p>
+      <div>
+        <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+          Visual Keyframe Prompt (Nano Banana 2.1)
+        </label>
+        <textarea class="clean-textarea" rows="2">Photorealistic Cymbal CX-900 supersonic jet in Stratosphere Obsidian livery climbing above golden-hour cloud deck.</textarea>
+      </div>
+      <div>
+        <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+          Camera Motion Directive (Omni 1.1 Flash)
+        </label>
+        <input type="text" class="clean-input" value="Smooth 24fps aerial tracking dolly alongside titanium winglet." />
+      </div>
+      <div>
+        <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+          Spoken Voiceover Line (Gemini TTS)
+        </label>
+        <input type="text" class="clean-input" value="At sixty thousand feet, clarity is everything." />
+      </div>
+      <div>
+        <label style="font: var(--md-sys-typescale-label-medium); display: block; margin-bottom: var(--md-sys-space-50);">
+          Conversational Turn Edit (Optional)
+        </label>
+        <input type="text" class="clean-input" placeholder="e.g., Add subtle Mach vapor cone on wingtip..." />
+      </div>
+    </form>
+    <div slot="actions">
+      <md-gb-button color="outlined" onclick="closeSceneInspector()">Cancel</md-gb-button>
+      <md-gb-button color="filled" onclick="closeSceneInspector()">Save & Regenerate Scene</md-gb-button>
+    </div>
+  </md-dialog>
+
+  <script>
+    function switchPrototype(which) {
+      ['a', 'b', 'c'].forEach((id) => {
+        const view = document.getElementById('proto-' + id);
+        const btn = document.getElementById('btn-proto-' + id);
+        if (id === which) {
+          view.classList.remove('hidden-view');
+          btn.classList.add('active');
+        } else {
+          view.classList.add('hidden-view');
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function switchProtoAStep(stepNum) {
+      [1, 2, 3, 4].forEach((n) => {
+        const view = document.getElementById('pa-step-' + n);
+        const tab = document.getElementById('pa-tab-' + n);
+        if (n === stepNum) {
+          view.classList.remove('hidden-view');
+          tab.classList.add('active');
+        } else {
+          view.classList.add('hidden-view');
+          tab.classList.remove('active');
+        }
+      });
+    }
+
+    function setProtoAMediaMode(mode) {
+      document.getElementById('pa-mode-img').classList.toggle('active', mode === 'image');
+      document.getElementById('pa-mode-vid').classList.toggle('active', mode === 'video');
+      document.querySelectorAll('.pa-media-label').forEach((el, idx) => {
+        el.textContent =
+          mode === 'video'
+            ? `Scene 0${idx + 1} Motion Clip (6s MP4)`
+            : `Scene 0${idx + 1} Keyframe Ready`;
+      });
+    }
+
+    function toggleBrandDrawerA() {
+      document.getElementById('pa-brand-drawer').classList.toggle('hidden-view');
+    }
+
+    function openSceneInspector(sceneNum) {
+      const dlg = document.getElementById('scene-inspector-dialog');
+      document.getElementById('dialog-scene-title').textContent =
+        `Edit Scene 0${sceneNum} — Prompts, Magic Edit & Takes`;
+      if (dlg && typeof dlg.show === 'function') {
+        dlg.show();
+      } else if (dlg) {
+        dlg.setAttribute('open', '');
+      }
+    }
+
+    function closeSceneInspector() {
+      const dlg = document.getElementById('scene-inspector-dialog');
+      if (dlg && typeof dlg.close === 'function') {
+        dlg.close();
+      } else if (dlg) {
+        dlg.removeAttribute('open');
+      }
+    }
+
+    const pbScenes = {
+      1: {
+        title: 'Scene 01 — Dawn Stratosphere Climb',
+        vo: 'At sixty thousand feet, clarity is everything.',
+        prompt: 'Stratosphere Obsidian CX-900 breaking through golden-hour cloud deck, 35mm anamorphic tracking shot.',
+      },
+      2: {
+        title: 'Scene 02 — Optical HUD Telemetry Lock',
+        vo: 'Triple-redundant optical sensors map every thermal current.',
+        prompt: 'Cockpit holographic HUD locking Mach 2.2 laminar flow vectors in Mach Cyan.',
+      },
+      3: {
+        title: 'Scene 03 — Mach 2.2 Horizon Finale',
+        vo: 'Cymbal Aerospace. Precision for the next century of flight.',
+        prompt: 'Adaptive morphing winglet banking over high-altitude curvature of Earth.',
+      },
+    };
+
+    function selectProtoBScene(num) {
+      const s = pbScenes[num];
+      document.getElementById('pb-stage-title').textContent = 'Active Selection: ' + s.title;
+      document.getElementById('pb-stage-caption').textContent = 'Previewing ' + s.title;
+      document.getElementById('pb-inspector-header').textContent = `Scene 0${num} Inspector`;
+      document.getElementById('pb-vo-input').value = s.vo;
+      document.getElementById('pb-prompt-input').value = s.prompt;
+      [1, 2, 3].forEach((n) => {
+        document.getElementById('pb-card-' + n).setAttribute(
+          'color',
+          n === num ? 'primary-container' : 'surface-container'
+        );
+      });
+    }
+
+    let wizardStep = 1;
+    function stepWizardC(delta) {
+      wizardStep = Math.max(1, Math.min(3, wizardStep + delta));
+      const s = pbScenes[wizardStep];
+      document.getElementById('pc-step-indicator').textContent =
+        `Wizard Step ${wizardStep} of 3 · Scene Approval`;
+      document.getElementById('pc-wizard-title').textContent = s.title;
+    }
+
+    function toggleTheme() {
+      const root = document.documentElement;
+      const current = root.style.colorScheme || 'dark';
+      root.style.colorScheme = current === 'dark' ? 'light' : 'dark';
+    }
+  </script>
+</body>
+</html>

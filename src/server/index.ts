@@ -44,7 +44,10 @@ async function start() {
   const distDir = join(ROOT_DIR, 'dist');
   if (existsSync(distDir)) {
     app.use(express.static(distDir));
-    app.get(/^\/(?!api|media).*/, (_req, res) => {
+    app.get('/prototypes', (_req, res) => {
+      res.sendFile(join(distDir, 'prototypes', 'index.html'));
+    });
+    app.get(/^\/(?!api|media|prototypes).*/, (_req, res) => {
       res.sendFile(join(distDir, 'index.html'));
     });
   }

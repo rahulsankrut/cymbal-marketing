@@ -654,6 +654,14 @@ export function App() {
 
           {/* Campaign Switcher & Quick Stats */}
           <div className="flex items-center gap-3">
+            <a
+              href="/prototypes/index.html"
+              data-testid="open-ux-prototypes-link"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 text-xs font-semibold transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              3 UX Prototypes (Material 3)
+            </a>
             <select
               aria-label="Select Active Campaign"
               value={activeCampaign?.id || ''}
