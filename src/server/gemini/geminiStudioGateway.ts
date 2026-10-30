@@ -1,9 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
 import { GoogleGenAI } from '@google/genai';
-import ffmpegPath from 'ffmpeg-static';
 import type {
   AssetTake,
   BrandEvaluationFinding,
@@ -230,269 +228,91 @@ export const BRAND_EVAL_JSON_SCHEMA = {
 };
 
 /**
- * Generates real playable WAV/MP4/PNG media buffers when running in a local sandbox
- * without GEMINI_API_KEY configured, while preserving the exact Interactions API schema.
+ * Wraps raw 16-bit mono PCM audio returned by Gemini TTS (`audio/L16;codec=pcm;rate=24000`)
+ * in a standard 44-byte RIFF/WAVE header so browsers and FFmpeg can play the live audio stream.
  */
-function synthesizeValidWavBuffer(durationSeconds = 4, frequencyHz = 220): Buffer {
-  const sampleRate = 24000;
-  const numSamples = Math.max(1, Math.floor(sampleRate * durationSeconds));
-  const dataSize = numSamples * 2;
-  const buffer = Buffer.alloc(44 + dataSize);
-
-  buffer.write('RIFF', 0);
-  buffer.writeUInt32LE(36 + dataSize, 4);
-  buffer.write('WAVE', 8);
-  buffer.write('fmt ', 12);
-  buffer.writeUInt32LE(16, 16);
-  buffer.writeUInt16LE(1, 20); // PCM
-  buffer.writeUInt16LE(1, 22); // Mono
-  buffer.writeUInt32LE(sampleRate, 24);
-  buffer.writeUInt32LE(sampleRate * 2, 28);
-  buffer.writeUInt16LE(2, 32);
-  buffer.writeUInt16LE(16, 34);
-  buffer.write('data', 36);
-  buffer.writeUInt32LE(dataSize, 40);
-
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    const envelope = Math.min(1, t * 8) * Math.min(1, (durationSeconds - t) * 6);
-    const sample =
-      Math.sin(2 * Math.PI * frequencyHz * t) * 0.35 +
-      Math.sin(2 * Math.PI * (frequencyHz * 1.5) * t) * 0.15;
-    const pcmValue = Math.max(-32767, Math.min(32767, Math.floor(sample * envelope * 14000)));
-    buffer.writeInt16LE(pcmValue, 44 + i * 2);
+function wrapRawPcm16MonoInWav(pcmBuffer: Buffer, sampleRate = 24000): Buffer {
+  if (pcmBuffer.length >= 4 && pcmBuffer.toString('ascii', 0, 4) === 'RIFF') {
+    return pcmBuffer;
   }
-  return buffer;
+  const dataSize = pcmBuffer.length;
+  const header = Buffer.alloc(44);
+  header.write('RIFF', 0);
+  header.writeUInt32LE(36 + dataSize, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // PCM format
+  header.writeUInt16LE(1, 22); // Mono
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(sampleRate * 2, 28); // ByteRate (SampleRate * NumChannels * BitsPerSample/8)
+  header.writeUInt16LE(2, 32); // BlockAlign
+  header.writeUInt16LE(16, 34); // BitsPerSample
+  header.write('data', 36);
+  header.writeUInt32LE(dataSize, 40);
+  return Buffer.concat([header, pcmBuffer]);
 }
 
-function synthesizeValidPngBuffer(): Buffer {
-  // Valid 1x1 Mach-Blue PNG or FFmpeg-rendered 640x360 card if ffmpeg is available
-  const fallbackBase64 =
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg==';
-  const bin = (ffmpegPath as unknown as string) || 'ffmpeg';
-  try {
-    const out = execFileSync(
-      bin,
-      [
-        '-v',
-        'error',
-        '-f',
-        'lavfi',
-        '-i',
-        'color=c=0x0A0F1D:s=640x360:d=1',
-        '-frames:v',
-        '1',
-        '-f',
-        'image2pipe',
-        '-vcodec',
-        'png',
-        'pipe:1',
-      ],
-      { timeout: 4000 }
-    );
-    if (out && out.length > 64) return out;
-  } catch {
-    // fallback to 1x1 PNG
+function selectGeminiTtsVoiceName(voiceIdOrGender?: string): string {
+  const lower = (voiceIdOrGender || '').toLowerCase();
+  const knownPrebuilt = ['kore', 'aoede', 'puck', 'charon', 'fenrir', 'leda', 'orus', 'zephyr'];
+  for (const v of knownPrebuilt) {
+    if (lower.includes(v)) {
+      return v.charAt(0).toUpperCase() + v.slice(1);
+    }
   }
-  return Buffer.from(fallbackBase64, 'base64');
-}
-
-function synthesizeValidMp4Buffer(durationSeconds = 4): Buffer {
-  const bin = (ffmpegPath as unknown as string) || 'ffmpeg';
-  try {
-    const out = execFileSync(
-      bin,
-      [
-        '-v',
-        'error',
-        '-f',
-        'lavfi',
-        '-i',
-        `testsrc2=size=640x360:rate=24:duration=${durationSeconds}`,
-        '-c:v',
-        'libx264',
-        '-pix_fmt',
-        'yuv420p',
-        '-movflags',
-        'frag_keyframe+empty_moov+default_base_moof',
-        '-f',
-        'mp4',
-        'pipe:1',
-      ],
-      { timeout: 8000 }
-    );
-    if (out && out.length > 128) return out;
-  } catch {
-    // fallback minimal bytes if ffmpeg execution fails
+  if (lower.includes('male') && !lower.includes('female')) {
+    return 'Charon';
   }
-  return Buffer.from('00000018667479706d703432000000006d70343269736f6d', 'hex');
-}
-
-function createFallbackSandboxClient(): RawInteractionsClient {
-  return {
-    interactions: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async create(params: Record<string, any>): Promise<RawInteractionResponse> {
-        const model = String(params.model || 'gemini-3.8-flash');
-        const id = `inter-${model.replace(/[^a-z0-9]/gi, '')}-${randomUUID().slice(0, 8)}`;
-
-        if (model.includes('nano-banana') || model.includes('image')) {
-          return {
-            id,
-            output_image: {
-              data: synthesizeValidPngBuffer().toString('base64'),
-              mime_type: 'image/png',
-            },
-            usage: { input_tokens: 280, output_tokens: 1024, total_tokens: 1304 },
-          };
-        }
-
-        if (model.includes('omni')) {
-          return {
-            id,
-            output_video: {
-              data: synthesizeValidMp4Buffer(5).toString('base64'),
-              mime_type: 'video/mp4',
-            },
-            usage: { input_tokens: 520, output_tokens: 2048, total_tokens: 2568 },
-          };
-        }
-
-        if (model.includes('tts')) {
-          return {
-            id,
-            output_audio: {
-              data: synthesizeValidWavBuffer(4, 240).toString('base64'),
-              mime_type: 'audio/wav',
-            },
-            usage: { input_tokens: 140, output_tokens: 680, total_tokens: 820 },
-          };
-        }
-
-        if (model.includes('lyria')) {
-          return {
-            id,
-            output_audio: {
-              data: synthesizeValidWavBuffer(12, 165).toString('base64'),
-              mime_type: 'audio/wav',
-            },
-            usage: { input_tokens: 640, output_tokens: 1850, total_tokens: 2490 },
-          };
-        }
-
-        // Structured JSON output for gemini-3.8-flash (Storyboard or Brand Eval)
-        const schemaProps = params.response_format?.schema?.properties || {};
-        if (schemaProps.scenes) {
-          return {
-            id,
-            output_text: JSON.stringify({
-              scenes: [
-                {
-                  title: 'Hangar Dawn & Titanium Airframe Reveal',
-                  narrativeBeat: 'Establish Cymbal Aerospace flagship design language and Mach-Blue telemetry accents.',
-                  visualPrompt:
-                    'Photorealistic wide anamorphic shot inside Cymbal Aerospace obsidian flight hangar at dawn; titanium-white supersonic fuselage with Mach-Blue (#0EA5E9) cheatline illuminated by warm sunrise rim lighting.',
-                  endFramePrompt:
-                    'Close-up transition onto the panoramic VisionX-9 cockpit canopy reflecting telemetry.',
-                  cameraMotionDirective:
-                    'Smooth 24fps dolly push along the carbon-titanium leading edge toward the cockpit canopy.',
-                  voiceoverScript:
-                    'In the quiet before dawn, precision engineering defines the next horizon of flight.',
-                  vocalStyleDirective: 'authoritative, calm, and inspiring aerospace narration',
-                  targetDurationSeconds: 6,
-                },
-                {
-                  title: 'VisionX-9 Glass Flight Deck & LIDAR Shear HUD',
-                  narrativeBeat: 'Showcase triple-redundant fly-by-optics and predictive 40nm atmospheric shear detection.',
-                  visualPrompt:
-                    'Interior cockpit shot over the pilot’s shoulder looking through the translucent Mach-Blue (#0EA5E9) VisionX-9 holographic HUD projecting 3D clear-air turbulence topology.',
-                  cameraMotionDirective:
-                    'Steady interior camera rack focus from dual side-stick controls to the holographic wind-shear corridor.',
-                  voiceoverScript:
-                    'VisionX-9 photonic LIDAR maps clear-air shear forty nautical miles ahead with triple-redundant optical certainty.',
-                  vocalStyleDirective: 'crisp, confident technical precision',
-                  targetDurationSeconds: 6,
-                },
-                {
-                  title: 'Stratospheric Mach Cruise Above the Limb',
-                  narrativeBeat: 'Deliver the heroic high-altitude payoff compliant with regulatory certification guardrails.',
-                  visualPrompt:
-                    'Exterior aerial tracking shot at 55,000 feet above the curved blue stratospheric limb of Earth, Cymbal Aerospace aircraft in level cruise with clean aerodynamic flow.',
-                  cameraMotionDirective:
-                    'Sweeping IMAX aerial orbit around the starboard delta wing against deep stratospheric indigo.',
-                  voiceoverScript:
-                    'Cymbal Aerospace. Engineering the stratosphere and beyond—subject to regulatory certification.',
-                  vocalStyleDirective: 'warm, resonant cinematic finale',
-                  targetDurationSeconds: 6,
-                },
-              ],
-            }),
-            usage: { input_tokens: 480, output_tokens: 590, total_tokens: 1070 },
-          };
-        }
-
-        return {
-          id,
-          output_text: JSON.stringify({
-            overallScore: 88,
-            categoryScores: {
-              visualIdentity: 92,
-              aerospaceRealism: 85,
-              narrativeAudioCohesion: 90,
-              regulatoryCompliance: 86,
-            },
-            executiveSummary:
-              'Strong adherence to Cymbal Aerospace Titanium-White and Mach-Blue visual identity across scenes. One minor lighting contrast refinement recommended on Scene 1 keyframe to sharpen telemetry legibility.',
-            findings: [
-              {
-                sceneNumber: 1,
-                modality: 'keyframe_start',
-                category: 'visual_identity',
-                severity: 'warning',
-                issue:
-                  'Mach-Blue (#0EA5E9) fuselage cheatline is slightly muted in shadow along the forward chine.',
-                suggestedFixPrompt:
-                  'Increase rim lighting along the forward fuselage chine so the Mach-Blue (#0EA5E9) livery cheatline and Cymbal Aerospace insignia are crisp and luminous.',
-              },
-            ],
-          }),
-          usage: { input_tokens: 920, output_tokens: 410, total_tokens: 1330 },
-        };
-      },
-    },
-    voices: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async create(params: Record<string, any>): Promise<RawVoiceResponse> {
-        const nameSlug = String(params?.voice?.display_name || 'cymbal-narrator')
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-');
-        return {
-          id: `voice_${nameSlug}_${randomUUID().slice(0, 6)}`,
-          sample_audio: {
-            data: synthesizeValidWavBuffer(3, 260).toString('base64'),
-            mime_type: 'audio/wav',
-          },
-        };
-      },
-    },
-  };
+  if (lower.includes('neutral')) {
+    return 'Puck';
+  }
+  return 'Kore';
 }
 
 export class GeminiStudioGateway {
   private readonly client: RawInteractionsClient;
+  private readonly customClient?: RawInteractionsClient;
+  private readonly vertexGlobal?: GoogleGenAI;
+  private readonly vertexRegional?: GoogleGenAI;
+  private readonly isVertexAi: boolean;
   private readonly vault: CampaignVault;
 
   constructor(options: { client?: RawInteractionsClient; vault: CampaignVault }) {
     this.vault = options.vault;
     if (options.client) {
+      this.customClient = options.client;
       this.client = options.client;
-    } else if (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) {
+      this.isVertexAi = false;
+    } else if (
+      (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) &&
+      process.env.GOOGLE_GENAI_USE_VERTEXAI !== '1'
+    ) {
       const sdk = new GoogleGenAI({
         apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
       });
       this.client = sdk as unknown as RawInteractionsClient;
+      this.isVertexAi = false;
     } else {
-      this.client = createFallbackSandboxClient();
+      const project =
+        process.env.GOOGLE_CLOUD_PROJECT ||
+        process.env.GCP_PROJECT_ID ||
+        'vertex-ai-demos-468803';
+      const globalLocation = process.env.GOOGLE_CLOUD_LOCATION || 'global';
+      const regionalLocation = process.env.VERTEX_LYRIA_LOCATION || 'us-central1';
+
+      this.vertexGlobal = new GoogleGenAI({
+        vertexai: true,
+        project,
+        location: globalLocation,
+      });
+      this.vertexRegional = new GoogleGenAI({
+        vertexai: true,
+        project,
+        location: regionalLocation,
+      });
+      this.client = this.vertexGlobal as unknown as RawInteractionsClient;
+      this.isVertexAi = true;
     }
   }
 
@@ -560,7 +380,11 @@ export class GeminiStudioGateway {
       },
     });
 
-    const parsed = JSON.parse(interaction.output_text || '{"scenes":[]}');
+    if (!interaction.output_text) {
+      throw new Error('gemini-3.8-flash returned an empty storyboard response.');
+    }
+
+    const parsed = JSON.parse(interaction.output_text);
     const anchorIds = campaign.anchors.map((a: ReferenceAnchor) => a.id);
     const scenes: SceneDraftInput[] = (parsed.scenes || []).map((s: SceneDraftInput) => ({
       title: s.title,
@@ -588,8 +412,81 @@ export class GeminiStudioGateway {
   ): Promise<MediaGenerationResult> {
     const startMs = Date.now();
     const modelId = request.modelId || 'gemini-nano-banana-2.1';
-
     const refs = (request.referenceImagePaths || []).slice(0, 14);
+
+    // Live Vertex AI path for gemini-nano-banana-2.1
+    if (this.isVertexAi && this.vertexGlobal) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parts: Array<Record<string, any>> = refs.map((ref) => ({
+        inlineData: {
+          data: ref.dataBase64,
+          mimeType: ref.mimeType,
+        },
+      }));
+
+      // If this is a stateful conversational edit turn, include the parent take's image so Nano Banana 2.1 edits it directly
+      if (request.previousInteractionId) {
+        try {
+          const campaign = await this.vault.getCampaign(request.campaignId);
+          const parentTake = campaign.takes.find(
+            (t) => t.interactionId === request.previousInteractionId
+          );
+          const parentMedia = this.readVaultMediaAsBase64(parentTake?.mediaUrl);
+          if (parentMedia) {
+            parts.push({
+              inlineData: {
+                data: parentMedia.dataBase64,
+                mimeType: parentMedia.mimeType,
+              },
+            });
+          }
+        } catch {
+          // ignore if campaign lookup fails
+        }
+      }
+
+      const instructionText = request.previousInteractionId
+        ? `Edit the provided image according to this instruction while preserving subject identity and composition: ${request.prompt}`
+        : request.prompt;
+      parts.push({ text: instructionText });
+
+      const response = await this.vertexGlobal.models.generateContent({
+        model: modelId,
+        contents: parts,
+        config: {
+          responseModalities: ['IMAGE'],
+        },
+      });
+
+      const imgPart = response.candidates?.[0]?.content?.parts?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) => p.inlineData?.data
+      );
+      const dataBase64 = imgPart?.inlineData?.data;
+      const mimeType = imgPart?.inlineData?.mimeType || 'image/png';
+      if (!dataBase64) {
+        throw new Error(`${modelId} did not return an image payload.`);
+      }
+
+      return {
+        interactionId: response.responseId || `inter-nb-${randomUUID().slice(0, 8)}`,
+        parentInteractionId: request.previousInteractionId,
+        modelId,
+        dataBase64,
+        mimeType,
+        fileExtension: mimeType.includes('jpeg') ? 'jpg' : 'png',
+        tokenUsage: response.usageMetadata
+          ? {
+              inputTokens: response.usageMetadata.promptTokenCount || 0,
+              outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+              totalTokens: response.usageMetadata.totalTokenCount || 0,
+            }
+          : undefined,
+        latencyMs: Date.now() - startMs,
+      };
+    }
+
+    // Interactions API path (API key or injected test client)
     const inputParts: Array<Record<string, string>> = refs.map((ref) => ({
       type: 'image',
       data: ref.dataBase64,
@@ -615,14 +512,16 @@ export class GeminiStudioGateway {
         ?.flatMap((st) => st.content || [])
         .find((c) => c.type === 'image');
 
-    const dataBase64 = img?.data || synthesizeValidPngBuffer().toString('base64');
-    const mimeType = img?.mime_type || 'image/png';
+    if (!img?.data) {
+      throw new Error(`${modelId} interaction did not return an image payload.`);
+    }
+    const mimeType = img.mime_type || 'image/png';
 
     return {
       interactionId: interaction.id || `inter-img-${randomUUID().slice(0, 8)}`,
       parentInteractionId: request.previousInteractionId,
       modelId,
-      dataBase64,
+      dataBase64: img.data,
       mimeType,
       fileExtension: mimeType.includes('jpeg') ? 'jpg' : 'png',
       tokenUsage: this.extractUsage(interaction.usage),
@@ -634,7 +533,11 @@ export class GeminiStudioGateway {
     request: VideoInteractionRequest
   ): Promise<MediaGenerationResult> {
     const startMs = Date.now();
-    const modelId = 'gemini-omni-1.1-flash';
+    // On Vertex AI, the published Omni 1.1 Flash endpoint ID is gemini-omni-1.1-flash-preview
+    const requestModelId = this.isVertexAi
+      ? 'gemini-omni-1.1-flash-preview'
+      : 'gemini-omni-1.1-flash';
+    const canonicalModelId = 'gemini-omni-1.1-flash';
 
     const inputParts: Array<Record<string, string>> = [];
     if (request.sourceVideoForExtension) {
@@ -665,9 +568,12 @@ export class GeminiStudioGateway {
     });
 
     const payload: Record<string, unknown> = {
-      model: modelId,
+      model: requestModelId,
       input: inputParts.length > 1 ? inputParts : request.prompt,
     };
+    if (this.isVertexAi) {
+      payload.response_format = { type: 'video' };
+    }
     if (request.previousInteractionId) {
       payload.previous_interaction_id = request.previousInteractionId;
     }
@@ -679,16 +585,18 @@ export class GeminiStudioGateway {
         ?.flatMap((st) => st.content || [])
         .find((c) => c.type === 'video');
 
+    if (!vid?.data) {
+      throw new Error(`${requestModelId} interaction did not return a video payload.`);
+    }
+
     const durationSeconds = request.durationSeconds || 6;
-    const dataBase64 =
-      vid?.data || synthesizeValidMp4Buffer(durationSeconds).toString('base64');
-    const mimeType = vid?.mime_type || 'video/mp4';
+    const mimeType = vid.mime_type || 'video/mp4';
 
     return {
       interactionId: interaction.id || `inter-vid-${randomUUID().slice(0, 8)}`,
       parentInteractionId: request.previousInteractionId,
-      modelId,
-      dataBase64,
+      modelId: canonicalModelId,
+      dataBase64: vid.data,
       mimeType,
       fileExtension: 'mp4',
       durationSeconds,
@@ -701,6 +609,66 @@ export class GeminiStudioGateway {
     campaignId: string,
     request: VoiceDesignRequest
   ): Promise<VoicePersonaConfig> {
+    // Live Vertex AI path using Gemini TTS voice synthesis for real audition sample
+    if (this.isVertexAi && this.vertexGlobal) {
+      const selectedPrebuiltVoice = selectGeminiTtsVoiceName(
+        `${request.displayName} ${request.gender}`
+      );
+      const voiceId = `voice_${selectedPrebuiltVoice.toLowerCase()}_${randomUUID().slice(0, 6)}`;
+      const auditionLine = `Speak with this vocal persona (${request.personaPrompt}): Cymbal Aerospace. Precision supersonic flight systems, cleared for stratospheric ascent.`;
+
+      const ttsRes = await this.vertexGlobal.models.generateContent({
+        model: 'gemini-2.5-flash-tts',
+        contents: auditionLine,
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: selectedPrebuiltVoice,
+              },
+            },
+          },
+        },
+      });
+
+      const audioPart = ttsRes.candidates?.[0]?.content?.parts?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) => p.inlineData?.data
+      );
+      if (!audioPart?.inlineData?.data) {
+        throw new Error('Gemini TTS did not return an audition audio payload.');
+      }
+
+      const rawPcm = Buffer.from(audioPart.inlineData.data, 'base64');
+      const wavBuffer = wrapRawPcm16MonoInWav(rawPcm, 24000);
+      const durationSeconds = Number((rawPcm.length / (24000 * 2)).toFixed(2));
+
+      const sampleTake = await this.vault.appendTake({
+        campaignId,
+        sceneId: null,
+        modality: 'voiceover_audio',
+        modelId: 'gemini-3.8-flash-tts',
+        interactionId: voiceId,
+        prompt: request.personaPrompt,
+        mediaBuffer: wavBuffer,
+        mimeType: 'audio/wav',
+        fileExtension: 'wav',
+        durationSeconds,
+        setAsActive: false,
+      });
+
+      return {
+        voiceId,
+        displayName: request.displayName,
+        gender: request.gender,
+        languageCode: request.languageCode,
+        personaPrompt: request.personaPrompt,
+        sampleAudioUrl: sampleTake.mediaUrl,
+        isDesignedVoice: true,
+      };
+    }
+
     if (!this.client.voices?.create) {
       throw new Error('Voices API not available on client');
     }
@@ -753,10 +721,61 @@ export class GeminiStudioGateway {
     request: VoiceoverInteractionRequest
   ): Promise<MediaGenerationResult> {
     const startMs = Date.now();
-    const modelId = 'gemini-3.8-flash-tts';
+    const canonicalModelId = 'gemini-3.8-flash-tts';
+
+    // Live Vertex AI path
+    if (this.isVertexAi && this.vertexGlobal) {
+      const selectedVoice = selectGeminiTtsVoiceName(request.voiceId);
+      const styledPrompt = `Speak in ${request.vocalStyleDirective || 'authoritative aerospace narration'}: ${request.text}`;
+
+      const response = await this.vertexGlobal.models.generateContent({
+        model: 'gemini-2.5-flash-tts',
+        contents: styledPrompt,
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: {
+                voiceName: selectedVoice,
+              },
+            },
+          },
+        },
+      });
+
+      const audioPart = response.candidates?.[0]?.content?.parts?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p: any) => p.inlineData?.data
+      );
+      if (!audioPart?.inlineData?.data) {
+        throw new Error('Gemini TTS did not return an audio payload.');
+      }
+
+      const rawPcm = Buffer.from(audioPart.inlineData.data, 'base64');
+      const wavBuffer = wrapRawPcm16MonoInWav(rawPcm, 24000);
+      const durationSeconds = Number((rawPcm.length / (24000 * 2)).toFixed(2));
+
+      return {
+        interactionId: response.responseId || `inter-tts-${randomUUID().slice(0, 8)}`,
+        parentInteractionId: request.previousInteractionId,
+        modelId: canonicalModelId,
+        dataBase64: wavBuffer.toString('base64'),
+        mimeType: 'audio/wav',
+        fileExtension: 'wav',
+        durationSeconds,
+        tokenUsage: response.usageMetadata
+          ? {
+              inputTokens: response.usageMetadata.promptTokenCount || 0,
+              outputTokens: response.usageMetadata.candidatesTokenCount || 0,
+              totalTokens: response.usageMetadata.totalTokenCount || 0,
+            }
+          : undefined,
+        latencyMs: Date.now() - startMs,
+      };
+    }
 
     const payload: Record<string, unknown> = {
-      model: modelId,
+      model: canonicalModelId,
       input: [
         {
           type: 'user_input',
@@ -790,18 +809,24 @@ export class GeminiStudioGateway {
         ?.flatMap((st) => st.content || [])
         .find((c) => c.type === 'audio');
 
+    if (!aud?.data) {
+      throw new Error(`${canonicalModelId} interaction did not return an audio payload.`);
+    }
+
+    const rawBuf = Buffer.from(aud.data, 'base64');
+    const wavBuf = wrapRawPcm16MonoInWav(rawBuf, 24000);
     const wordCount = request.text.trim().split(/\s+/).filter(Boolean).length;
-    const estimatedDuration = Math.max(2.5, Number((wordCount / 2.6).toFixed(1)));
-    const dataBase64 =
-      aud?.data || synthesizeValidWavBuffer(estimatedDuration, 240).toString('base64');
-    const mimeType = aud?.mime_type || 'audio/wav';
+    const estimatedDuration =
+      rawBuf.length > 1000
+        ? Number((rawBuf.length / (24000 * 2)).toFixed(2))
+        : Math.max(2.5, Number((wordCount / 2.6).toFixed(1)));
 
     return {
       interactionId: interaction.id || `inter-tts-${randomUUID().slice(0, 8)}`,
       parentInteractionId: request.previousInteractionId,
-      modelId,
-      dataBase64,
-      mimeType,
+      modelId: canonicalModelId,
+      dataBase64: wavBuf.toString('base64'),
+      mimeType: 'audio/wav',
       fileExtension: 'wav',
       durationSeconds: estimatedDuration,
       tokenUsage: this.extractUsage(interaction.usage),
@@ -813,7 +838,54 @@ export class GeminiStudioGateway {
     request: MusicInteractionRequest
   ): Promise<MediaGenerationResult> {
     const startMs = Date.now();
-    const modelId = request.modelId || 'lyria-3.5';
+    const canonicalModelId = request.modelId || 'lyria-3.5';
+
+    // Live Vertex AI path on regional Lyria publisher model (us-central1)
+    if (this.isVertexAi && this.vertexRegional) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const regionalApiClient = (this.vertexRegional as any).apiClient;
+      const response = await regionalApiClient.request({
+        path: 'publishers/google/models/lyria-002:predict',
+        httpMethod: 'POST',
+        body: JSON.stringify({
+          instances: [
+            {
+              prompt: `Original instrumental electronic ambient synth pad with deep sub-bass pulse and warm atmospheric strings: ${request.prompt}`,
+            },
+          ],
+          parameters: {
+            sample_count: 1,
+          },
+        }),
+      });
+
+      const json = await response.responseInternal.json();
+      const pred = json?.predictions?.[0];
+      const bytesBase64: string | undefined = pred?.bytesBase64Encoded || pred?.audioContent;
+      if (!bytesBase64) {
+        throw new Error('Lyria model on Vertex AI did not return an audio prediction.');
+      }
+
+      const wavBuf = Buffer.from(bytesBase64, 'base64');
+      let durationSeconds = request.durationSeconds || 30;
+      if (wavBuf.length >= 44 && wavBuf.toString('ascii', 0, 4) === 'RIFF') {
+        const byteRate = wavBuf.readUInt32LE(28);
+        const dataSize = wavBuf.readUInt32LE(40);
+        if (byteRate > 0 && dataSize > 0) {
+          durationSeconds = Number((dataSize / byteRate).toFixed(2));
+        }
+      }
+
+      return {
+        interactionId: `inter-lyria-${randomUUID().slice(0, 8)}`,
+        modelId: canonicalModelId,
+        dataBase64: bytesBase64,
+        mimeType: 'audio/wav',
+        fileExtension: 'wav',
+        durationSeconds,
+        latencyMs: Date.now() - startMs,
+      };
+    }
 
     const inputParts: Array<Record<string, string>> = [
       {
@@ -828,7 +900,7 @@ export class GeminiStudioGateway {
     ];
 
     const interaction = await this.client.interactions.create({
-      model: modelId,
+      model: canonicalModelId,
       input: inputParts,
     });
 
@@ -838,15 +910,17 @@ export class GeminiStudioGateway {
         ?.flatMap((st) => st.content || [])
         .find((c) => c.type === 'audio');
 
+    if (!aud?.data) {
+      throw new Error(`${canonicalModelId} interaction did not return an audio payload.`);
+    }
+
     const durationSeconds = request.durationSeconds || 24;
-    const dataBase64 =
-      aud?.data || synthesizeValidWavBuffer(durationSeconds, 165).toString('base64');
-    const mimeType = aud?.mime_type || 'audio/wav';
+    const mimeType = aud.mime_type || 'audio/wav';
 
     return {
       interactionId: interaction.id || `inter-lyria-${randomUUID().slice(0, 8)}`,
-      modelId,
-      dataBase64,
+      modelId: canonicalModelId,
+      dataBase64: aud.data,
       mimeType,
       fileExtension: mimeType.includes('mpeg') || mimeType.includes('mp3') ? 'mp3' : 'wav',
       durationSeconds,
@@ -913,7 +987,11 @@ export class GeminiStudioGateway {
       },
     });
 
-    const raw = JSON.parse(interaction.output_text || '{}');
+    if (!interaction.output_text) {
+      throw new Error('gemini-3.8-flash returned an empty brand evaluation response.');
+    }
+
+    const raw = JSON.parse(interaction.output_text);
     const findings: BrandEvaluationFinding[] = (raw.findings || []).map(
       (f: Omit<BrandEvaluationFinding, 'id' | 'sceneId' | 'resolved'>) => {
         const sceneIdx = Math.max(0, (f.sceneNumber || 1) - 1);

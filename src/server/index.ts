@@ -1,12 +1,30 @@
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import express from 'express';
 import { CampaignVault } from './vault/campaignVault.js';
 import { createStudioApp } from './app.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..', '..');
+
+// Load .env if present
+const envPath = join(ROOT_DIR, '.env');
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx > 0) {
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+      if (process.env[key] === undefined) {
+        process.env[key] = val;
+      }
+    }
+  }
+}
+
 const DATA_DIR = process.env.STUDIO_DATA_DIR || join(ROOT_DIR, '.data');
 const PORT = Number(process.env.PORT || 4190);
 
