@@ -17,7 +17,8 @@
 ## 2. Five Deep Modules (Ousterhout Architecture)
 
 ### 1. [`CampaignVault`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/vault/campaignVault.ts) & [`seedData.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/vault/seedData.ts)
-- Owns durable JSON state (`.data/vault-state.json`), non-destructive media take files on disk (`.data/media/`), and upstream-to-downstream `stale` flag cascading:
+- Owns durable JSON state (`.data/vault-state.json`), non-destructive media take files on disk (`.data/media/`), real `.mp4` `mvhd` atom duration inspection in `appendTake`, and upstream-to-downstream `stale` flag cascading:
+  - Editing `title` or `creativeBrief` in `updateCampaignMeta` resets `currentStage = 1` and clears prior scenes, anchors, audio, and master cut pointers so custom stories start cleanly.
   - Editing `visualPrompt` marks `keyframe_start`, `motion_video`, and `masterStale` as `true`.
   - Editing `cameraMotionDirective` or switching active keyframe take marks `motion_video` and `masterStale` as `true`.
   - Editing `voiceoverScript` marks `voiceover_audio` and `masterStale` as `true`.
@@ -28,21 +29,22 @@
 
 ### 2. [`GeminiStudioGateway`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/gemini/geminiStudioGateway.ts)
 - Encapsulates all `@google/genai` `interactions.create`, `voices.create`, `models.generateVideos`, and Vertex AI `lyria-002` calls behind a clean domain interface:
-  - `generateStructuredStoryboard(params)`
+  - `generateStoryboard(campaign, brandKit, sceneCount)` — prioritizes custom `title` & `creativeBrief` subjects and visual styles (e.g., anime) over background corporate brand kit defaults.
   - `generateReferenceAnchorImage(params)`
-  - `generateSceneKeyframe(params)`
-  - `generateSceneMotionClip(params)`
-  - `designNarratorVoice(params)`
-  - `synthesizeSceneVoiceover(params)` — accepts `speakingRate?: number` (default `1.25`) and applies FFmpeg `atempo` so synthesized `.wav` voiceovers are brisk and energetic without pitch shift.
-  - `generateCampaignMusicScore(params)`
-  - `evaluateCampaignBrandCompliance(params)`
+  - `generateOrEditImage(params)`
+  - `synthesizeOrEditVideo(params)`
+  - `designVoicePersona(campaignId, request)`
+  - `synthesizeSceneVoiceover(params)` — accepts `speakingRate?: number` and applies a single FFmpeg `atempo` pass on the `.wav` file so voiceovers play at the exact selected speed without pitch shift or double speedup.
+  - `composeCampaignMusic(params)`
+  - `evaluateCampaignBrandCompliance(campaign, brandKit)`
 
 ### 3. [`StudioPipelineOrchestrator`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/orchestrator/studioPipelineOrchestrator.ts)
-- Caller-optimized facade coordinating `CampaignVault`, `GeminiStudioGateway`, and `MasterTimelineAssembler` with `Promise.all` parallel batch execution (`batchGenerateSceneAssets`), `previous_interaction_id` lineage lookup, One-Click Brand Eval Auto-Fix (`applyBrandEvaluationAutoFixes`), and SSE lifecycle telemetry (`job.started`, `job.completed`, `job.failed`).
+- Caller-optimized facade coordinating `CampaignVault`, `GeminiStudioGateway`, and `MasterTimelineAssembler` with `Promise.all` parallel batch execution (`runBatchStageJob`), `previous_interaction_id` lineage lookup, `speakingRate` preservation across `designVoicePersonaStage`, One-Click Brand Eval Auto-Fix (`applyBrandFindingAutoFix`), and SSE lifecycle telemetry (`job.started`, `job.completed`, `job.failed`).
 
 ### 4. [`MasterTimelineAssembler`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/assembler/masterTimelineAssembler.ts)
-- `buildTimelinePlan(campaignId)`: Computes per-scene timeline segments, silence padding vs. voiceover overflow warnings, and the `-12dB` (`volume=0.251`) FFmpeg music ducking filtergraph during active narration windows.
-- `assembleMasterCut(campaignId)`: Writes the final master `.mp4` directly to disk (`libx264`, `yuv420p`, `aac`, `-movflags +faststart`, `maxBuffer: 128 MB`), concatenating real scene motion `.mp4` clips (with `tpad=stop_mode=clone` when voiceover exceeds video duration), real per-scene `.wav` voiceovers at their exact synthesized `speakingRate` (no duplicate `atempo`), and `-12dB` ducked `.wav` soundtrack.
+- `probeDurationSeconds(take, fallbackSeconds)`: Reads exact `.mp4` durations from the `mvhd` Movie Header Atom (`10.03s` per scene clip) and `.wav` durations from the `RIFF` header on disk before falling back to `take.durationSeconds`.
+- `computeTimelinePlan(campaign)`: Computes per-scene timeline segments, silence padding vs. voiceover overflow warnings, and the `-12dB` (`volume=0.251`) FFmpeg music ducking filtergraph during active narration windows.
+- `assembleMasterCut(campaignId)`: Writes the final master `.mp4` directly to disk (`libx264`, `yuv420p`, `aac`, `-movflags +faststart`, `maxBuffer: 128 MB`), concatenating full-duration scene motion `.mp4` clips (`10.03s` each, with `tpad=stop_mode=clone` if voiceover exceeds video duration), per-scene `.wav` voiceovers at their exact synthesized `speakingRate` (no duplicate `atempo`), and `-12dB` ducked `.wav` soundtrack.
 
 ### 5. [`StudioWorkspaceUI`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/App.tsx), [`SceneInspectorModal`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/components/SceneInspectorModal.tsx) & [`studioViewModel`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/viewModel/studioViewModel.ts)
 - Pure, zero-DOM ViewModel selectors and option constants in [`studioViewModel.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/viewModel/studioViewModel.ts):
@@ -50,10 +52,10 @@
   - `buildCalmBriefViewState(campaign, starterTemplates)` — Step 1 (`1. Brief`) without Brand Guardrails or Custom Kit clutter.
   - `DEFAULT_STORYBOARD_PREVIEW_MODE = 'video'`, `buildVisualSceneCards(campaign, previewMode)`, `buildSceneInspectorModalState(campaign, sceneId)` — Step 2 (`2. Storyboard & Visuals`) with **Motion Clips primary**, **Keyframes toggle**, `0` open textareas on the grid, and on-demand [`SceneInspectorModal`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/components/SceneInspectorModal.tsx).
   - `VOICE_PRESET_OPTIONS`, `VOICE_SPEED_OPTIONS` (`1.25x` default), `VOICE_STYLE_OPTIONS`, `MUSIC_GENRE_OPTIONS`, `MUSIC_TEMPO_OPTIONS`, `MUSIC_INSTRUMENT_OPTIONS`, `composeSoundtrackPromptFromSelections`, `buildStreamlinedAudioViewState(campaign)` — Step 3 (`3. Voice & Soundtrack`) dropdown controls + editable prompts.
-  - `buildFinalCutTheaterViewState(campaign)` — Step 4 (`4. Final Cut`) pure `16:9` `<video>` theater without Brand Eval or raw FFmpeg filtergraph strings.
+  - `buildFinalCutTheaterViewState(campaign)` — Step 4 (`4. Final Cut`) pure `16:9` `<video>` theater without Brand Eval or raw FFmpeg filtergraph strings, auto-reassembling when entered with `masterStale: true`.
 
 ---
 
 ## 3. REST API & Verification Commands
-- **Key Routes ([`src/server/index.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/index.ts))**: `GET /api/bootstrap`, `POST /api/campaigns`, `PATCH /api/campaigns/:id`, `POST /api/campaigns/:id/storyboard/generate`, `POST /api/campaigns/:id/scenes/:sceneId/generate`, `POST /api/campaigns/:id/batch-generate`, `POST /api/campaigns/:id/voice-design`, `POST /api/campaigns/:id/music/generate`, `POST /api/campaigns/:id/assemble`, `GET /api/campaigns/:id/events` (SSE).
-- **Build & Test**: Run `npm run build && npm test` (10 Vitest suites, 16 behavioral tests, TypeScript `--noEmit`, and Vite production bundle).
+- **Key Routes ([`src/server/app.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/app.ts))**: `GET /api/bootstrap`, `POST /api/campaigns`, `PATCH /api/campaigns/:id`, `POST /api/campaigns/:id/storyboard/generate` (accepts atomic `{ title, targetAudience, creativeBrief }`), `POST /api/campaigns/:id/scenes/:sceneId/generate` & `POST /api/campaigns/:id/batch-generate` (accept atomic `{ speakingRate, voiceId, vocalStylePreset }`), `POST /api/campaigns/:id/voice-design`, `POST /api/campaigns/:id/music/generate`, `POST /api/campaigns/:id/assemble`, `GET /api/campaigns/:id/events` (SSE).
+- **Build & Test**: Run `npm run build && npm test` (10 Vitest suites, 17 behavioral tests, TypeScript `--noEmit`, and Vite production bundle).
