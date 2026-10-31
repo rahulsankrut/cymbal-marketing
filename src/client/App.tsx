@@ -106,10 +106,21 @@ export function App() {
       const data = await res.json();
       setBrandKits(data.brandKits || []);
       setStarterTemplates(data.starterTemplates || []);
-      setCampaigns(data.campaigns || []);
+      const campaignList: CampaignSummary[] = data.campaigns || [];
+      setCampaigns(campaignList);
 
-      const targetId = selectCampaignId || data.campaigns?.[0]?.id;
+      const savedId =
+        typeof window !== 'undefined'
+          ? window.localStorage.getItem('cymbal_active_campaign_id') || undefined
+          : undefined;
+      const validSavedId =
+        savedId && campaignList.some((c) => c.id === savedId) ? savedId : undefined;
+      const targetId = selectCampaignId || validSavedId || campaignList[0]?.id;
+
       if (targetId) {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('cymbal_active_campaign_id', targetId);
+        }
         const detailRes = await fetch(`/api/campaigns/${targetId}`);
         if (detailRes.ok) {
           const detail: CampaignDetail = await detailRes.json();
@@ -191,8 +202,25 @@ export function App() {
     }
   }
 
+  function syncCampaignSummaryFromDetail(detail: CampaignDetail) {
+    setCampaigns((prev) =>
+      prev.map((c) =>
+        c.id === detail.id
+          ? {
+              ...c,
+              title: detail.title,
+              currentStage: detail.currentStage,
+              sceneCount: detail.scenes.length,
+              masterStale: detail.masterStale,
+              updatedAt: detail.updatedAt,
+            }
+          : c
+      )
+    );
+  }
+
   async function handleUpdateCampaignField(patch: Partial<CampaignDetail>) {
-    if (!activeCampaign) return;
+    if (!activeCampaign || busyAction === 'generate-storyboard') return;
     try {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}`, {
         method: 'PATCH',
@@ -202,11 +230,47 @@ export function App() {
       if (res.ok) {
         const updated: CampaignDetail = await res.json();
         setActiveCampaign(updated);
+        syncCampaignSummaryFromDetail(updated);
       }
     } catch (err) {
       setErrorBanner((err as Error).message);
     }
   }
+
+  // Debounced auto-save for Step 1 Brief edits so refreshing the page never loses in-progress edits
+  useEffect(() => {
+    if (!activeCampaign || activeStage !== 1 || busyAction === 'generate-storyboard') {
+      return;
+    }
+    const timer = setTimeout(() => {
+      void fetch(`/api/campaigns/${activeCampaign.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: activeCampaign.title,
+          targetAudience: activeCampaign.targetAudience,
+          creativeBrief: activeCampaign.creativeBrief,
+          musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
+        }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((updated: CampaignDetail | null) => {
+          if (updated) {
+            syncCampaignSummaryFromDetail(updated);
+          }
+        })
+        .catch(() => {});
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [
+    activeCampaign?.id,
+    activeCampaign?.title,
+    activeCampaign?.targetAudience,
+    activeCampaign?.creativeBrief,
+    activeCampaign?.musicalMoodPrompt,
+    activeStage,
+    busyAction,
+  ]);
 
   async function handleGenerateStoryboard() {
     if (!activeCampaign) return;
@@ -216,7 +280,13 @@ export function App() {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/storyboard/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sceneCount: 3 }),
+        body: JSON.stringify({
+          sceneCount: 3,
+          title: activeCampaign.title,
+          targetAudience: activeCampaign.targetAudience,
+          creativeBrief: activeCampaign.creativeBrief,
+          musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
+        }),
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
@@ -224,6 +294,7 @@ export function App() {
       }
       const updated: CampaignDetail = await res.json();
       setActiveCampaign(updated);
+      syncCampaignSummaryFromDetail(updated);
       setActiveStage(2);
     } catch (err) {
       setErrorBanner((err as Error).message);
@@ -724,7 +795,15 @@ export function App() {
                       type="text"
                       value={activeCampaign.title}
                       onChange={(e) =>
-                        setActiveCampaign({ ...activeCampaign, title: e.target.value })
+                        setActiveCampaign({
+                          ...activeCampaign,
+                          title: e.target.value,
+                          currentStage: 1,
+                          scenes: [],
+                          activeMasterTakeId: undefined,
+                          activeMusicTakeId: undefined,
+                          masterStale: false,
+                        })
                       }
                       onBlur={() =>
                         void handleUpdateCampaignField({ title: activeCampaign.title })
@@ -764,6 +843,12 @@ export function App() {
                       setActiveCampaign({
                         ...activeCampaign,
                         creativeBrief: e.target.value,
+                        currentStage: 1,
+                        scenes: [],
+                        activeMasterTakeId: undefined,
+                        activeMusicTakeId: undefined,
+                        masterStale: false,
+                        templateId: undefined,
                       })
                     }
                     onBlur={() =>

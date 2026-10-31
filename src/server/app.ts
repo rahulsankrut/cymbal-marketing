@@ -117,6 +117,20 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   app.post('/api/campaigns/:id/storyboard/generate', async (req, res) => {
     try {
       const sceneCount = Number(req.body?.sceneCount || 3);
+      const briefPatch: Record<string, unknown> = {};
+      if (typeof req.body?.title === 'string') briefPatch.title = req.body.title;
+      if (typeof req.body?.targetAudience === 'string') {
+        briefPatch.targetAudience = req.body.targetAudience;
+      }
+      if (typeof req.body?.creativeBrief === 'string') {
+        briefPatch.creativeBrief = req.body.creativeBrief;
+      }
+      if (typeof req.body?.musicalMoodPrompt === 'string') {
+        briefPatch.musicalMoodPrompt = req.body.musicalMoodPrompt;
+      }
+      if (Object.keys(briefPatch).length > 0) {
+        await vault.updateCampaignMeta(req.params.id, briefPatch);
+      }
       const updated = await orchestrator.runStoryboardStage(req.params.id, sceneCount);
       res.json(updated);
     } catch (err) {

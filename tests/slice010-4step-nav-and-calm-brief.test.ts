@@ -1,6 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { CampaignVault } from '../src/server/vault/campaignVault.js';
 import {
   SIMPLIFIED_STEPS,
   mapBackendStageToStep,
@@ -94,5 +96,82 @@ describe('Slice 010 — 4-Step Storycraft Pill Navigation & Calm Brief View-Mode
     expect(appSource).not.toContain('(Stage ');
     expect(appSource).not.toContain('Create Division Brand Kit');
     expect(appSource).not.toContain('Approved Livery & Telemetry Color Tokens');
+  });
+
+  it('resets downstream stage completion when editing Campaign Title or Creative Brief on a completed campaign', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'cymbal-reset-brief-'));
+    try {
+      const vault = new CampaignVault(tempDir);
+      await vault.seedDefaultBrandKitAndTemplates();
+      const created = await vault.createCampaign({
+        templateId: 'tpl-supersonic-avionics-8921',
+      });
+      await vault.saveStoryboardScenes(
+        created.id,
+        [
+          {
+            title: 'Scene 1',
+            narrativeBeat: 'Hook',
+            visualPrompt: 'Jet in sky',
+            cameraMotionDirective: 'Tracking shot',
+            voiceoverScript: 'Up in the clouds.',
+            vocalStyleDirective: 'Warm',
+            targetDurationSeconds: 6,
+          },
+        ],
+        2
+      );
+      await vault.appendTake({
+        campaignId: created.id,
+        sceneId: null,
+        modality: 'music_score',
+        modelId: 'lyria-3.5',
+        interactionId: 'int-music',
+        prompt: 'Score',
+        mediaBuffer: Buffer.from('wav'),
+        mimeType: 'audio/wav',
+        fileExtension: 'wav',
+      });
+      await vault.appendTake({
+        campaignId: created.id,
+        sceneId: null,
+        modality: 'master_video',
+        modelId: 'ffmpeg-master-assembler',
+        interactionId: 'int-master',
+        prompt: 'Master',
+        mediaBuffer: Buffer.from('mp4'),
+        mimeType: 'video/mp4',
+        fileExtension: 'mp4',
+      });
+
+      const completedDetail = await vault.getCampaign(created.id);
+      expect(completedDetail.currentStage).toBe(6);
+      expect(computeSimplifiedStepReadiness(completedDetail)).toEqual({
+        1: true,
+        2: true,
+        3: true,
+        4: true,
+      });
+
+      // Now edit the brief to start a new story ("Paper ship to cruise")
+      const afterEdit = await vault.updateCampaignMeta(created.id, {
+        title: 'Paper ship to cruise',
+        creativeBrief: 'Anime style. Kid playing in front of house eventually becoming a cruise ship',
+      });
+      expect(afterEdit.currentStage).toBe(1);
+      expect(afterEdit.scenes).toHaveLength(0);
+      expect(afterEdit.activeMusicTakeId).toBeUndefined();
+      expect(afterEdit.activeMasterTakeId).toBeUndefined();
+      expect(afterEdit.templateId).toBeUndefined();
+      expect(afterEdit.anchors).toHaveLength(0);
+      expect(computeSimplifiedStepReadiness(afterEdit)).toEqual({
+        1: true,
+        2: false,
+        3: false,
+        4: false,
+      });
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });

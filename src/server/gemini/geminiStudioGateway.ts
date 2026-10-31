@@ -362,17 +362,31 @@ export class GeminiStudioGateway {
     const startMs = Date.now();
     const modelId = 'gemini-3.8-flash';
 
-    const prompt = [
-      `You are the Executive Creative Director for ${brandKit.organization} (${brandKit.name}).`,
+    const isCustomUserStory = !campaign.templateId;
+    const promptLines = [
+      `You are the Executive Creative Director for ${brandKit.organization}.`,
       `Generate a ${sceneCount}-scene storyboard for the campaign "${campaign.title}".`,
       `Target Audience: ${campaign.targetAudience}`,
-      `Creative Brief: ${campaign.creativeBrief}`,
-      `Key Product Claims: ${campaign.keyProductClaims.join(' | ')}`,
-      `Visual Identity Rules: ${brandKit.visualIdentityRules.join(' | ')}`,
-      `Aerospace Technical Realism Rules: ${brandKit.aerospaceRealismRules.join(' | ')}`,
-      `Regulatory Claim Guardrails: ${brandKit.regulatoryClaimGuardrails.join(' | ')}`,
-      `Available Visual Reference Anchors: ${campaign.anchors.map((a) => `${a.name} (${a.category}): ${a.description}`).join('; ')}`,
-    ].join('\n');
+      `Creative Brief (PRIMARY DIRECTIVE — MUST FOLLOW EXACTLY): ${campaign.creativeBrief}`,
+      `CRITICAL: Every scene's title, narrativeBeat, visualPrompt, cameraMotionDirective, and voiceoverScript MUST directly depict the exact subjects, setting, plot transformation, and visual style (e.g., anime, photorealistic, watercraft, cruise ship, rocket, aircraft, etc.) specified in the Campaign Title ("${campaign.title}") and Creative Brief ("${campaign.creativeBrief}"). Do NOT substitute airplanes or jets if the Creative Brief describes a different subject (such as a paper ship becoming a cruise ship).`,
+      `Keep each scene's voiceoverScript concise (12 to 18 words maximum) so it can be spoken briskly inside a 6-second scene.`,
+    ];
+
+    if (!isCustomUserStory) {
+      promptLines.push(
+        `Key Product Claims: ${campaign.keyProductClaims.join(' | ')}`,
+        `Visual Identity Guidelines: ${brandKit.visualIdentityRules.join(' | ')}`,
+        `Technical Realism Guidelines: ${brandKit.aerospaceRealismRules.join(' | ')}`,
+        `Regulatory Claim Guardrails: ${brandKit.regulatoryClaimGuardrails.join(' | ')}`
+      );
+    }
+    if (campaign.anchors.length > 0) {
+      promptLines.push(
+        `Available Visual Reference Anchors: ${campaign.anchors.map((a) => `${a.name} (${a.category}): ${a.description}`).join('; ')}`
+      );
+    }
+
+    const prompt = promptLines.join('\n');
 
     const interaction = await this.client.interactions.create({
       model: modelId,

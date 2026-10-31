@@ -35,11 +35,15 @@ export function computeSimplifiedStepReadiness(
     return { 1: false, 2: false, 3: false, 4: false };
   }
   const hasBrief = Boolean(campaign.title.trim() && campaign.creativeBrief.trim());
-  const hasStoryboard = campaign.scenes.length > 0;
+  const hasStoryboard = campaign.currentStage >= 2 && campaign.scenes.length > 0;
   const hasAudio =
-    Boolean(campaign.activeMusicTakeId) ||
-    campaign.scenes.some((s) => Boolean(s.activeTakes.voiceover_audio));
-  const hasFinalCut = Boolean(campaign.activeMasterTakeId);
+    campaign.currentStage >= 5 &&
+    (Boolean(campaign.activeMusicTakeId) ||
+      campaign.scenes.some((s) => Boolean(s.activeTakes.voiceover_audio)));
+  const hasFinalCut =
+    campaign.currentStage >= 6 &&
+    Boolean(campaign.activeMasterTakeId) &&
+    !campaign.masterStale;
 
   return {
     1: hasBrief,

@@ -289,6 +289,30 @@ export class CampaignVault {
     if (!campaign) {
       throw new Error(`Campaign not found: ${campaignId}`);
     }
+
+    const titleChanged =
+      patch.title !== undefined && patch.title.trim() !== campaign.title.trim();
+    const briefChanged =
+      patch.creativeBrief !== undefined &&
+      patch.creativeBrief.trim() !== campaign.creativeBrief.trim();
+
+    // When the user edits the Campaign Title or Creative Brief to start a new story,
+    // reset downstream stage completion, old scenes, and old audio/master cut pointers.
+    if ((titleChanged || briefChanged) && patch.currentStage === undefined) {
+      campaign.currentStage = 1;
+      campaign.scenes = [];
+      campaign.activeMasterTakeId = undefined;
+      campaign.activeMusicTakeId = undefined;
+      campaign.latestTimelinePlan = undefined;
+      campaign.latestBrandEvaluation = undefined;
+      campaign.masterStale = false;
+      if (briefChanged && patch.creativeBrief) {
+        campaign.templateId = undefined;
+        campaign.keyProductClaims = [patch.creativeBrief.trim()];
+        campaign.anchors = [];
+      }
+    }
+
     Object.assign(campaign, patch, { updatedAt: new Date().toISOString() });
     this.writeDb(db);
     return campaign;
@@ -363,12 +387,12 @@ export class CampaignVault {
       updatedAt: now,
     }));
 
-    if (campaign.currentStage < advanceToStage) {
-      campaign.currentStage = advanceToStage;
-    }
-    if (campaign.activeMasterTakeId) {
-      campaign.masterStale = true;
-    }
+    campaign.currentStage = advanceToStage;
+    campaign.activeMasterTakeId = undefined;
+    campaign.activeMusicTakeId = undefined;
+    campaign.latestTimelinePlan = undefined;
+    campaign.latestBrandEvaluation = undefined;
+    campaign.masterStale = false;
     campaign.updatedAt = now;
     this.writeDb(db);
     return campaign.scenes;
