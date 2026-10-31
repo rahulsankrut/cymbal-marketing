@@ -21,18 +21,20 @@ import type {
   CampaignDetail,
   CampaignSummary,
   Modality,
+  ReferenceAnchor,
   Scene,
   StarterCampaignTemplate,
   StudioSSEEvent,
-  StudioStageNumber,
 } from '../shared/types.js';
 import {
   SIMPLIFIED_STEPS,
+  mapBackendStageToStep,
   computeSimplifiedStepReadiness,
   buildCalmBriefViewState,
   buildVisualSceneCards,
   buildSceneInspectorModalState,
   buildFinalCutTheaterViewState,
+  type SimplifiedStepNumber,
   type StoryboardMediaPreviewMode,
 } from './viewModel/studioViewModel.js';
 import { SceneInspectorModal } from './components/SceneInspectorModal.js';
@@ -42,7 +44,7 @@ export function App() {
   const [starterTemplates, setStarterTemplates] = useState<StarterCampaignTemplate[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignSummary[]>([]);
   const [activeCampaign, setActiveCampaign] = useState<CampaignDetail | null>(null);
-  const [activeStage, setActiveStage] = useState<StudioStageNumber>(1);
+  const [activeStage, setActiveStage] = useState<SimplifiedStepNumber>(1);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [events, setEvents] = useState<StudioSSEEvent[]>([]);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
@@ -71,7 +73,8 @@ export function App() {
   // New Reference Anchor form state
   const [showNewAnchorForm, setShowNewAnchorForm] = useState(false);
   const [newAnchorName, setNewAnchorName] = useState('');
-  const [newAnchorCategory, setNewAnchorCategory] = useState<'aircraft' | 'cockpit' | 'crew' | 'logo' | 'environment'>('aircraft');
+  const [newAnchorCategory, setNewAnchorCategory] =
+    useState<ReferenceAnchor['category']>('aircraft');
   const [newAnchorPrompt, setNewAnchorPrompt] = useState('');
 
   async function loadBootstrap(selectCampaignId?: string) {
@@ -535,13 +538,17 @@ export function App() {
               className="bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
             >
               {campaigns.map((c) => {
-                const stageNum =
+                const mappedStep =
                   c.id === activeCampaign?.id
-                    ? Math.max(c.currentStage, activeCampaign.currentStage, activeStage)
-                    : c.currentStage;
+                    ? Math.max(
+                        mapBackendStageToStep(c.currentStage),
+                        mapBackendStageToStep(activeCampaign.currentStage),
+                        activeStage
+                      )
+                    : mapBackendStageToStep(c.currentStage);
                 return (
                   <option key={c.id} value={c.id}>
-                    {c.title} (Stage {stageNum}/6)
+                    {c.title} (Step {mappedStep}/4)
                   </option>
                 );
               })}
@@ -577,7 +584,7 @@ export function App() {
                   key={st.number}
                   type="button"
                   data-testid={`stage-tab-${st.number}`}
-                  onClick={() => setActiveStage(st.number as StudioStageNumber)}
+                  onClick={() => setActiveStage(st.number)}
                   className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     isActive
                       ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
@@ -930,20 +937,14 @@ export function App() {
                           value={newAnchorCategory}
                           onChange={(e) =>
                             setNewAnchorCategory(
-                              e.target.value as
-                                | 'aircraft'
-                                | 'cockpit'
-                                | 'crew'
-                                | 'logo'
-                                | 'environment'
+                              e.target.value as ReferenceAnchor['category']
                             )
                           }
                           className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
                         >
                           <option value="aircraft">aircraft</option>
-                          <option value="cockpit">cockpit</option>
-                          <option value="crew">crew</option>
-                          <option value="logo">logo</option>
+                          <option value="avionics">avionics</option>
+                          <option value="character">character</option>
                           <option value="environment">environment</option>
                         </select>
                       </div>

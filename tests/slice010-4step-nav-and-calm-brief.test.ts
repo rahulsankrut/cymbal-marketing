@@ -90,6 +90,8 @@ describe('Slice 010 — 4-Step Storycraft Pill Navigation & Calm Brief View-Mode
   it('wires SIMPLIFIED_STEPS in App.tsx and removes Brand Guardrails & Custom Brand Kit clutter from Step 1', () => {
     const appSource = readFileSync(join(process.cwd(), 'src/client/App.tsx'), 'utf8');
     expect(appSource).toContain('SIMPLIFIED_STEPS');
+    expect(appSource).toContain('mapBackendStageToStep');
+    expect(appSource).not.toContain('(Stage ');
     expect(appSource).not.toContain('Create Division Brand Kit');
     expect(appSource).not.toContain('Approved Livery & Telemetry Color Tokens');
   });
