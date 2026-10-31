@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-10-30T23:33:43.599Z",
+  "updatedAt": "2026-10-31T00:27:32.395Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -31,28 +31,28 @@
             },
             {
               "id": "p1-scaffold",
-              "label": "Scaffold workflow directories (issues/, issues/done/, ralph/)",
+              "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-credentials",
-              "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+              "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
               "completed": true,
               "userToggled": true,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-research",
-              "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+              "label": "Cache codebase & domain exploration in research.md (optional)",
               "completed": true,
               "userToggled": true,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-prototype",
-              "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
+              "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
               "completed": false,
               "userToggled": true,
               "manuallyUnchecked": true
@@ -75,12 +75,12 @@
             },
             {
               "id": "p2-decisions",
-              "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
+              "label": "Resolve decision tree dependencies one by one",
               "completed": true
             },
             {
               "id": "p2-edgecases",
-              "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
+              "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
               "completed": true
             },
             {
@@ -100,12 +100,12 @@
           "items": [
             {
               "id": "p3-modules",
-              "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
+              "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
               "completed": true
             },
             {
               "id": "p3-testing",
-              "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
+              "label": "Confirm behavioral testing decisions & required credentials",
               "completed": true
             },
             {
@@ -301,24 +301,24 @@
             },
             {
               "id": "p1-scaffold",
-              "label": "Scaffold workflow directories (issues/, issues/done/, ralph/)",
+              "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-credentials",
-              "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+              "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
               "completed": true
             },
             {
               "id": "p1-research",
-              "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+              "label": "Cache codebase & domain exploration in research.md (optional)",
               "completed": true
             },
             {
               "id": "p1-prototype",
-              "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
+              "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
               "completed": true
             }
           ]
@@ -328,28 +328,28 @@
           "number": 2,
           "title": "The Grill Session (Native /grill-me)",
           "mode": "HITL",
-          "status": "not_started",
-          "notes": "",
+          "status": "completed",
+          "notes": "Aligned on Option A (4-Step Storycraft Pill Flow: 1. Brief, 2. Storyboard & Visuals, 3. Voice & Soundtrack, 4. Final Cut). Removed Brand Guardrails, Custom Brand Kit, Brand Eval Scorecard, raw FFmpeg filtergraphs, and raw interaction/model ID badges from UI. Unified Keyframes & Motion into visual-first Scene Cards with an Image/Video toggle, collapsible Reference Anchors drawer, and On-Demand Scene Inspector Modal.",
           "items": [
             {
               "id": "p2-invoke",
               "label": "Run native /grill-me interview against client-brief.md & codebase",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p2-decisions",
-              "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
-              "completed": false
+              "label": "Resolve decision tree dependencies one by one",
+              "completed": true
             },
             {
               "id": "p2-edgecases",
-              "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
-              "completed": false
+              "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
+              "completed": true
             },
             {
               "id": "p2-shared",
               "label": "Confirm shared design concept (Fred Brooks alignment)",
-              "completed": false
+              "completed": true
             }
           ]
         },
@@ -363,12 +363,12 @@
           "items": [
             {
               "id": "p3-modules",
-              "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
+              "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
               "completed": false
             },
             {
               "id": "p3-testing",
-              "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
+              "label": "Confirm behavioral testing decisions & required credentials",
               "completed": false
             },
             {
@@ -445,15 +445,15 @@
               "id": "p5-commit",
               "label": "Verify structured commit & move completed ticket to issues/done/",
               "completed": false,
-              "userToggled": true,
-              "manuallyUnchecked": true
+              "userToggled": false,
+              "manuallyUnchecked": false
             },
             {
               "id": "p5-afk-all",
               "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
               "completed": false,
-              "userToggled": true,
-              "manuallyUnchecked": true
+              "userToggled": false,
+              "manuallyUnchecked": false
             }
           ]
         },
@@ -563,24 +563,24 @@
         },
         {
           "id": "p1-scaffold",
-          "label": "Scaffold workflow directories (issues/, issues/done/, ralph/)",
+          "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
           "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
         },
         {
           "id": "p1-credentials",
-          "label": "Verify Google Cloud Auth (gcloud ADC) & Google API keys (GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, etc.)",
+          "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
           "completed": true
         },
         {
           "id": "p1-research",
-          "label": "Cache Google stack/API & codebase exploration in research.md (optional)",
+          "label": "Cache codebase & domain exploration in research.md (optional)",
           "completed": true
         },
         {
           "id": "p1-prototype",
-          "label": "Build disposable UI prototypes (google-material-3-web-prototype / hand-drawn-ui) (optional)",
+          "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
           "completed": true
         }
       ]
@@ -590,28 +590,28 @@
       "number": 2,
       "title": "The Grill Session (Native /grill-me)",
       "mode": "HITL",
-      "status": "not_started",
-      "notes": "",
+      "status": "completed",
+      "notes": "Aligned on Option A (4-Step Storycraft Pill Flow: 1. Brief, 2. Storyboard & Visuals, 3. Voice & Soundtrack, 4. Final Cut). Removed Brand Guardrails, Custom Brand Kit, Brand Eval Scorecard, raw FFmpeg filtergraphs, and raw interaction/model ID badges from UI. Unified Keyframes & Motion into visual-first Scene Cards with an Image/Video toggle, collapsible Reference Anchors drawer, and On-Demand Scene Inspector Modal.",
       "items": [
         {
           "id": "p2-invoke",
           "label": "Run native /grill-me interview against client-brief.md & codebase",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p2-decisions",
-          "label": "Resolve decision tree & Google stack choices (ADK, Gemini, Maps, GCP data/hosting) one by one",
-          "completed": false
+          "label": "Resolve decision tree dependencies one by one",
+          "completed": true
         },
         {
           "id": "p2-edgecases",
-          "label": "Settle nasty edge cases (auth/ADC, quotas, permissions, schemas)",
-          "completed": false
+          "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
+          "completed": true
         },
         {
           "id": "p2-shared",
           "label": "Confirm shared design concept (Fred Brooks alignment)",
-          "completed": false
+          "completed": true
         }
       ]
     },
@@ -625,12 +625,12 @@
       "items": [
         {
           "id": "p3-modules",
-          "label": "Review & approve proposed Deep Modules and Google SDK interfaces (/plan)",
+          "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
           "completed": false
         },
         {
           "id": "p3-testing",
-          "label": "Confirm behavioral testing decisions & required Google Cloud/API credentials",
+          "label": "Confirm behavioral testing decisions & required credentials",
           "completed": false
         },
         {
@@ -707,15 +707,15 @@
           "id": "p5-commit",
           "label": "Verify structured commit & move completed ticket to issues/done/",
           "completed": false,
-          "userToggled": true,
-          "manuallyUnchecked": true
+          "userToggled": false,
+          "manuallyUnchecked": false
         },
         {
           "id": "p5-afk-all",
           "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
           "completed": false,
-          "userToggled": true,
-          "manuallyUnchecked": true
+          "userToggled": false,
+          "manuallyUnchecked": false
         }
       ]
     },
