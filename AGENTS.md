@@ -22,9 +22,9 @@
   - Editing `cameraMotionDirective` or switching active keyframe take marks `motion_video` and `masterStale` as `true`.
   - Editing `voiceoverScript` marks `voiceover_audio` and `masterStale` as `true`.
 - `seedDefaultBrandKitAndTemplates()` refreshes `db.starterTemplates` on startup with 3 simple, 1-sentence executive-friendly use cases:
-  - `tpl-kids-paper-plane-rocket` (*Kids Level: Paper Plane to Rocket Ship*)
-  - `tpl-college-cubesat-launch` (*College Level: Campus Satellite Launch*)
-  - `tpl-exec-supersonic-3hr` (*Executive Level: New York to London in 3 Hours*)
+  - `tpl-supersonic-avionics-8921` (*Paper Plane to Rocket Ship*)
+  - `tpl-hydrogen-cryo-propulsion` (*CubeSat Orbital Weather Launch*)
+  - `tpl-orbital-telemetry-constellation` (*New York to London in 3 Hours*)
 
 ### 2. [`GeminiStudioGateway`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/gemini/geminiStudioGateway.ts)
 - Encapsulates all `@google/genai` `interactions.create`, `voices.create`, `models.generateVideos`, and Vertex AI `lyria-002` calls behind a clean domain interface:

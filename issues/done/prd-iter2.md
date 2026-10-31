@@ -18,7 +18,7 @@ Transform the Cymbal Aerospace Studio frontend into **Option A: 4-Step Storycraf
    - Replace the 6 multi-line stage cards with a sleek, single-line pill bar: **`1. Brief`** → **`2. Storyboard & Visuals`** → **`3. Voice & Soundtrack`** → **`4. Final Cut`**.
    - Remove raw model ID badges and raw `interactionId` strings from primary cards.
 2. **Step 1 — Focused Campaign Brief (`1. Brief`)**:
-   - Present **3 Simple, Executive-Friendly 1-Sentence Starter Presets** (`Kids Level: Paper Plane to Rocket Ship`, `College Level: Campus Satellite Launch`, and `Executive Level: New York to London in 3 Hours`) and a focused **Creative Brief Card** (Campaign Title, Target Audience, Creative Pitch, Soundtrack Mood, and primary **"Generate Storyboard →"** CTA).
+   - Present **3 Simple, 1-Sentence Starter Presets** (`Paper Plane to Rocket Ship`, `CubeSat Orbital Weather Launch`, and `New York to London in 3 Hours`) and a focused **Creative Brief Card** (Campaign Title, Target Audience, Creative Pitch, Soundtrack Mood, and primary **"Generate Storyboard →"** CTA).
    - Remove Brand Guardrails, color swatch grids, compliance rule lists, and the Custom Brand Kit form from the UI.
 3. **Step 2 — Unified Visual Storyboard & On-Demand Scene Inspector (`2. Storyboard & Visuals`)**:
    - Merge Keyframes and Motion Video clips into a single **Visual-First Scene Grid** with **`Motion Clips (Primary)`** (`DEFAULT_STORYBOARD_PREVIEW_MODE = 'video'`) selected by default and **`Keyframes`** as a secondary toggle in the toolbar, plus 1-click batch actions (*"Synthesize All Motion Clips"*, *"Generate All Keyframes"*).

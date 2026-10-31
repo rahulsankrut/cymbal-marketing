@@ -99,31 +99,31 @@ export const VOICE_PRESET_OPTIONS: ReadonlyArray<VoicePresetOption> = [
   },
   {
     voiceId: 'Puck',
-    displayName: 'Puck — Friendly & Playful (Kids / STEM)',
+    displayName: 'Puck — Friendly & Playful Storyteller',
     gender: 'neutral',
-    defaultStyle: 'Friendly, curious, energetic kids science host',
+    defaultStyle: 'Friendly, curious, energetic storyteller',
     defaultPrompt:
-      'An enthusiastic, friendly science storyteller with bright energy and playful curiosity for young learners.',
+      'An enthusiastic, friendly storyteller with bright energy and playful curiosity.',
   },
   {
     voiceId: 'Aoede',
-    displayName: 'Aoede — Inspiring & Clear (College / Innovation)',
+    displayName: 'Aoede — Inspiring & Clear Innovation Host',
     gender: 'female',
-    defaultStyle: 'Inspiring, clear university innovation presenter',
+    defaultStyle: 'Inspiring, clear innovation presenter',
     defaultPrompt:
-      'An articulate, inspiring university innovation host with clear diction and forward-looking energy.',
+      'An articulate, inspiring innovation host with clear diction and forward-looking energy.',
   },
   {
     voiceId: 'Fenrir',
-    displayName: 'Fenrir — Bold & Dynamic (Executive Launch)',
+    displayName: 'Fenrir — Bold & Dynamic Keynote Speaker',
     gender: 'male',
-    defaultStyle: 'Confident, concise executive keynote speaker',
+    defaultStyle: 'Confident, concise keynote speaker',
     defaultPrompt:
-      'A confident, fast-paced executive keynote presenter with punchy delivery and modern gravitas.',
+      'A confident, fast-paced keynote presenter with punchy delivery and modern gravitas.',
   },
   {
     voiceId: 'Charon',
-    displayName: 'Charon — Deep & Steady (Cinema Trailer)',
+    displayName: 'Charon — Deep & Steady Cinema Narrator',
     gender: 'male',
     defaultStyle: 'Warm cinematic storyteller',
     defaultPrompt:
@@ -134,25 +134,25 @@ export const VOICE_PRESET_OPTIONS: ReadonlyArray<VoicePresetOption> = [
 export const VOICE_SPEED_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
   { value: 1.25, label: '1.25x — Fast & Energetic (Recommended)' },
   { value: 1.15, label: '1.15x — Crisp Commercial Pace' },
-  { value: 1.4, label: '1.40x — Rapid Executive Summary' },
+  { value: 1.4, label: '1.40x — Rapid High-Energy Pace' },
   { value: 1.0, label: '1.00x — Standard Natural Pace' },
   { value: 0.95, label: '0.95x — Measured Storyteller' },
 ];
 
 export const VOICE_STYLE_OPTIONS: ReadonlyArray<string> = [
   'Crisp, upbeat, fast-paced commercial narrator',
-  'Friendly, curious, energetic kids science host',
-  'Inspiring, clear university innovation presenter',
-  'Confident, concise executive keynote speaker',
+  'Friendly, curious, energetic storyteller',
+  'Inspiring, clear innovation presenter',
+  'Confident, concise keynote speaker',
   'Warm cinematic storyteller',
 ];
 
 export const MUSIC_GENRE_OPTIONS: ReadonlyArray<string> = [
-  'Playful, upbeat orchestral adventure (Kids / Wonder)',
-  'Upbeat indie electronic synth pulse (College / Tech)',
-  'Crisp, modern executive keynote pulse (Executive Launch)',
-  'Crystalline ambient piano & warm synth pad (Minimalist)',
-  'High-energy cinematic percussion & brass (Action Spot)',
+  'Playful, upbeat orchestral adventure',
+  'Upbeat indie electronic synth pulse',
+  'Crisp, modern keynote pulse',
+  'Crystalline ambient piano & warm synth pad',
+  'High-energy cinematic percussion & brass',
 ];
 
 export const MUSIC_TEMPO_OPTIONS: ReadonlyArray<string> = [

@@ -47,13 +47,13 @@ export const DEFAULT_CYMBAL_BRAND_KIT: BrandKit = {
 export const STARTER_CAMPAIGN_TEMPLATES: StarterCampaignTemplate[] = [
   {
     id: 'tpl-supersonic-avionics-8921',
-    title: 'Kids Level: Paper Plane to Rocket Ship',
-    subtitle: 'Simple & Playful · Elementary STEM Story',
-    targetAudience: 'Kids, Families & Young Space Explorers',
+    title: 'Paper Plane to Rocket Ship',
+    subtitle: 'Backyard Wonder · Inspiring Future Flyers',
+    targetAudience: 'Families & Everyday Viewers',
     spotDurationSeconds: 18,
     aspectRatio: '16:9',
     creativeBrief:
-      'A curious kid folds a bright blue paper airplane in the backyard, tosses it into the sunny sky, and watches it transform into a friendly Cymbal jet zooming above the clouds.',
+      'A folded blue paper airplane tossed in a sunny backyard transforms mid-flight into a sleek Cymbal jet soaring above the clouds.',
     keyProductClaims: [
       'Simple, wonder-filled visual story anyone can follow.',
       'Sparks curiosity about how airplanes fly.',
@@ -79,40 +79,40 @@ export const STARTER_CAMPAIGN_TEMPLATES: StarterCampaignTemplate[] = [
   },
   {
     id: 'tpl-hydrogen-cryo-propulsion',
-    title: 'College Level: Campus Satellite Launch',
-    subtitle: 'College Level · Student Engineering Project',
-    targetAudience: 'University Students, Campus Labs & Future Engineers',
+    title: 'CubeSat Orbital Weather Launch',
+    subtitle: 'Small-Sat Engineering · Lab to Low-Earth Orbit',
+    targetAudience: 'Aerospace Engineers & STEM Innovators',
     spotDurationSeconds: 18,
     aspectRatio: '16:9',
     creativeBrief:
-      'Three college students build a small CubeSat satellite in their university lab, count down as it launches at sunrise, and celebrate when its first photo of Earth arrives on their laptop.',
+      'An engineering team builds a compact shoebox-sized weather satellite in the lab, launches it at sunrise, and receives its first live storm image from orbit.',
     keyProductClaims: [
-      'Hands-on student engineering from campus lab to orbit.',
-      'Real-time Earth camera built by university teams.',
+      'Compact CubeSat engineering from cleanroom bench to orbit.',
+      'Real-time Earth weather imaging from low-Earth orbit.',
     ],
     musicalMoodPrompt:
       'Upbeat indie electronic synth pulse with warm acoustic guitar and driving drums at 118 BPM.',
     suggestedAnchors: [
       {
-        name: 'Student CubeSat Prototype',
+        name: 'CubeSat Weather Prototype',
         category: 'avionics',
-        description: 'Compact 10cm cube satellite with blue solar panels on a university workbench.',
+        description: 'Compact 10cm cube satellite with blue solar panels on an electronics bench.',
         generationPrompt:
-          'Photorealistic shot of a compact shoebox-sized CubeSat satellite with gleaming blue solar panels on a clean university electronics lab bench.',
+          'Photorealistic shot of a compact shoebox-sized CubeSat satellite with gleaming blue solar panels on a clean aerospace electronics lab bench.',
       },
       {
-        name: 'University Robotics Lab',
+        name: 'Space Systems Integration Lab',
         category: 'environment',
-        description: 'Bright modern university engineering lab with laptops and mission monitors.',
+        description: 'Bright modern aerospace lab with telemetry monitors.',
         generationPrompt:
-          'Bright modern university aerospace engineering lab with students gathered around a laptop displaying live orbital telemetry.',
+          'Bright modern aerospace engineering lab with engineers gathered around a monitor displaying live orbital telemetry.',
       },
     ],
   },
   {
     id: 'tpl-orbital-telemetry-constellation',
-    title: 'Executive Level: New York to London in 3 Hours',
-    subtitle: 'Executive Level · Clean Supersonic Travel',
+    title: 'New York to London in 3 Hours',
+    subtitle: 'Zero-Emission Supersonic Flagship',
     targetAudience: 'Airline Executives, Business Travelers & Investors',
     spotDurationSeconds: 18,
     aspectRatio: '16:9',
