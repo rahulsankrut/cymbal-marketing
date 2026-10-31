@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-10-31T00:27:32.395Z",
+  "updatedAt": "2026-10-31T01:45:32.394Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -358,28 +358,28 @@
           "number": 3,
           "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
           "mode": "HITL",
-          "status": "not_started",
-          "notes": "",
+          "status": "completed",
+          "notes": "Generated issues/prd.md for Iteration #2 (Option A 4-Step Storycraft Flow + On-Demand Scene Inspector Modal, studioViewModel deep module, and removal of Brand Guardrails / Brand Eval Scorecard / raw FFmpeg telemetry).",
           "items": [
             {
               "id": "p3-modules",
               "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p3-testing",
               "label": "Confirm behavioral testing decisions & required credentials",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p3-outofscope",
               "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p3-prd-written",
               "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
-              "completed": false
+              "completed": true
             }
           ]
         },
@@ -388,33 +388,33 @@
           "number": 4,
           "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
           "mode": "HITL",
-          "status": "not_started",
-          "notes": "",
+          "status": "completed",
+          "notes": "Sliced Iteration #2 PRD into 3 vertical tracer-bullet tickets (010-4step-pill-nav-and-calm-brief-tracer.md, 011-unified-visual-storyboard-and-scene-modal.md, 012-streamlined-audio-and-pure-final-cut-theater.md).",
           "items": [
             {
               "id": "p4-draft",
               "label": "Draft vertical tracer-bullet slices from issues/prd.md",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p4-tracer",
               "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p4-afk-tags",
               "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p4-dag",
               "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p4-created",
               "label": "Write local markdown tickets (issues/NNN-*.md)",
-              "completed": false
+              "completed": true
             }
           ]
         },
@@ -423,7 +423,7 @@
           "number": 5,
           "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
           "mode": "AFK",
-          "status": "not_started",
+          "status": "in_progress",
           "notes": "",
           "items": [
             {
@@ -620,28 +620,28 @@
       "number": 3,
       "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
       "mode": "HITL",
-      "status": "not_started",
-      "notes": "",
+      "status": "completed",
+      "notes": "Generated issues/prd.md for Iteration #2 (Option A 4-Step Storycraft Flow + On-Demand Scene Inspector Modal, studioViewModel deep module, and removal of Brand Guardrails / Brand Eval Scorecard / raw FFmpeg telemetry).",
       "items": [
         {
           "id": "p3-modules",
           "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p3-testing",
           "label": "Confirm behavioral testing decisions & required credentials",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p3-outofscope",
           "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p3-prd-written",
           "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
-          "completed": false
+          "completed": true
         }
       ]
     },
@@ -650,33 +650,33 @@
       "number": 4,
       "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
       "mode": "HITL",
-      "status": "not_started",
-      "notes": "",
+      "status": "completed",
+      "notes": "Sliced Iteration #2 PRD into 3 vertical tracer-bullet tickets (010-4step-pill-nav-and-calm-brief-tracer.md, 011-unified-visual-storyboard-and-scene-modal.md, 012-streamlined-audio-and-pure-final-cut-theater.md).",
       "items": [
         {
           "id": "p4-draft",
           "label": "Draft vertical tracer-bullet slices from issues/prd.md",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p4-tracer",
           "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p4-afk-tags",
           "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p4-dag",
           "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p4-created",
           "label": "Write local markdown tickets (issues/NNN-*.md)",
-          "completed": false
+          "completed": true
         }
       ]
     },
@@ -685,7 +685,7 @@
       "number": 5,
       "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
       "mode": "AFK",
-      "status": "not_started",
+      "status": "in_progress",
       "notes": "",
       "items": [
         {
