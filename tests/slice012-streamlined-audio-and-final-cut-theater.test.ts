@@ -1,11 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildFinalCutTheaterViewState } from '../src/client/viewModel/studioViewModel.js';
+import {
+  buildStreamlinedAudioViewState,
+  buildFinalCutTheaterViewState,
+  computeTotalStaleCount,
+} from '../src/client/viewModel/studioViewModel.js';
 import type { CampaignDetail } from '../src/shared/types.js';
 
 describe('Slice 012 — Streamlined Audio Studio & Pure Final Cut Theater', () => {
-  it('builds a Pure Final Cut Theater state that hides Brand Evaluation Scorecards and raw FFmpeg filtergraphs', () => {
+  it('builds Streamlined Audio Studio and Pure Final Cut Theater states that hide Brand Evaluation Scorecards and raw FFmpeg filtergraphs', () => {
     const campaign: CampaignDetail = {
       id: 'camp-3',
       title: 'CX-900 Supersonic Avionics Launch',
@@ -69,6 +73,11 @@ describe('Slice 012 — Streamlined Audio Studio & Pure Final Cut Theater', () =
       updatedAt: '2026-10-30T00:00:00Z',
     };
 
+    const audioView = buildStreamlinedAudioViewState(campaign);
+    expect(audioView.activeNarratorName).toBe('Commander Elena Vance');
+    expect(audioView.scenes).toHaveLength(1);
+    expect(computeTotalStaleCount(campaign)).toBe(0);
+
     const view = buildFinalCutTheaterViewState(campaign);
     expect(view.masterVideoUrl).toBe('/media/take-master-1.mp4');
     expect(view.totalDurationSeconds).toBe(6);
@@ -79,6 +88,7 @@ describe('Slice 012 — Streamlined Audio Studio & Pure Final Cut Theater', () =
 
   it('wires Step 3 (Voice & Soundtrack) and Step 4 (Pure Final Cut Theater) in App.tsx without Brand Eval or FFmpeg filtergraph clutter', () => {
     const appSource = readFileSync(join(process.cwd(), 'src/client/App.tsx'), 'utf8');
+    expect(appSource).toContain('buildStreamlinedAudioViewState');
     expect(appSource).toContain('buildFinalCutTheaterViewState');
     expect(appSource).toContain('toggle-voice-persona-btn');
     expect(appSource).not.toContain('Multimodal Brand & Aerospace Compliance Scorecard');

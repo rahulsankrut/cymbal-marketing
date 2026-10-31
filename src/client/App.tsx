@@ -16,7 +16,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type {
-  AssetTake,
   BrandKit,
   CampaignDetail,
   CampaignSummary,
@@ -30,9 +29,11 @@ import {
   SIMPLIFIED_STEPS,
   mapBackendStageToStep,
   computeSimplifiedStepReadiness,
+  computeTotalStaleCount,
   buildCalmBriefViewState,
   buildVisualSceneCards,
   buildSceneInspectorModalState,
+  buildStreamlinedAudioViewState,
   buildFinalCutTheaterViewState,
   type SimplifiedStepNumber,
   type StoryboardMediaPreviewMode,
@@ -124,11 +125,6 @@ export function App() {
 
   const activeBrandKit =
     brandKits.find((b) => b.id === activeCampaign?.brandKitId) || brandKits[0];
-
-  function getTakeById(takeId?: string): AssetTake | undefined {
-    if (!takeId || !activeCampaign) return undefined;
-    return activeCampaign.takes.find((t) => t.id === takeId);
-  }
 
   async function handleCreateCampaignFromTemplate(templateId: string) {
     setBusyAction(`template-${templateId}`);
@@ -477,16 +473,7 @@ export function App() {
     }
   }
 
-  const totalStaleCount =
-    (activeCampaign?.scenes.reduce((acc, s) => {
-      return (
-        acc +
-        (s.stale.keyframe_start ? 1 : 0) +
-        (s.stale.keyframe_end ? 1 : 0) +
-        (s.stale.motion_video ? 1 : 0) +
-        (s.stale.voiceover_audio ? 1 : 0)
-      );
-    }, 0) || 0) + (activeCampaign?.masterStale ? 1 : 0);
+  const totalStaleCount = computeTotalStaleCount(activeCampaign);
 
   return (
     <div className="min-h-screen bg-[#070B14] text-slate-100 flex flex-col">
@@ -1199,154 +1186,156 @@ export function App() {
         })()}
 
         {/* STEP 3: Streamlined Voice & Soundtrack Studio */}
-        {activeStage === 3 && activeCampaign && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left 7 Cols: Per-Scene Narration Studio + Collapsible Voice Persona */}
-            <div className="lg:col-span-7 space-y-4">
-              <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <AudioLines className="w-4 h-4 text-sky-400" />
-                    Scene Voiceover Narration
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Active Narrator: <strong>{activeCampaign.voicePersona.displayName}</strong>
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    data-testid="toggle-voice-persona-btn"
-                    onClick={() => setShowVoicePersonaForm((v) => !v)}
-                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Mic className="w-3.5 h-3.5 text-sky-400" />
-                    Customize Voice Persona
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="batch-generate-voiceover-btn"
-                    disabled={busyAction === 'batch-voiceover_audio'}
-                    onClick={() => void handleBatchGenerate('voiceover_audio')}
-                    className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                  >
-                    {busyAction === 'batch-voiceover_audio'
-                      ? 'Synthesizing All Voiceovers...'
-                      : 'Synthesize All Voiceovers'}
-                  </button>
-                </div>
-              </div>
-
-              {showVoicePersonaForm && (
-                <section
-                  data-testid="voice-persona-drawer"
-                  className="bg-[#0D1326] border border-sky-500/30 rounded-2xl p-5 space-y-4"
-                >
+        {activeStage === 3 && activeCampaign && (() => {
+          const audioView = buildStreamlinedAudioViewState(activeCampaign);
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left 7 Cols: Per-Scene Narration Studio + Collapsible Voice Persona */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-sky-400">
-                      Custom Narrator Voice Persona
-                    </h3>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      <AudioLines className="w-4 h-4 text-sky-400" />
+                      Scene Voiceover Narration
+                    </h2>
                     <p className="text-xs text-slate-400">
-                      Describe the vocal tone, cadence, and persona for your campaign narrator.
+                      Active Narrator: <strong>{audioView.activeNarratorName}</strong>
                     </p>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      data-testid="toggle-voice-persona-btn"
+                      onClick={() => setShowVoicePersonaForm((v) => !v)}
+                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Mic className="w-3.5 h-3.5 text-sky-400" />
+                      Customize Voice Persona
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="batch-generate-voiceover-btn"
+                      disabled={busyAction === 'batch-voiceover_audio'}
+                      onClick={() => void handleBatchGenerate('voiceover_audio')}
+                      className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
+                    >
+                      {busyAction === 'batch-voiceover_audio'
+                        ? 'Synthesizing All Voiceovers...'
+                        : 'Synthesize All Voiceovers'}
+                    </button>
+                  </div>
+                </div>
 
-                  <form onSubmit={(e) => void handleDesignVoice(e)} className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                {showVoicePersonaForm && (
+                  <section
+                    data-testid="voice-persona-drawer"
+                    className="bg-[#0D1326] border border-sky-500/30 rounded-2xl p-5 space-y-4"
+                  >
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-sky-400">
+                        Custom Narrator Voice Persona
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Describe the vocal tone, cadence, and persona for your campaign narrator.
+                      </p>
+                    </div>
+
+                    <form onSubmit={(e) => void handleDesignVoice(e)} className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-slate-400 mb-1">
+                            Narrator Name
+                          </label>
+                          <input
+                            type="text"
+                            value={voiceDisplayName}
+                            onChange={(e) => setVoiceDisplayName(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-400 mb-1">
+                            Voice Gender
+                          </label>
+                          <select
+                            value={voiceGender}
+                            onChange={(e) =>
+                              setVoiceGender(e.target.value as 'female' | 'male' | 'neutral')
+                            }
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                          >
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="neutral">Neutral</option>
+                          </select>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-[11px] text-slate-400 mb-1">
-                          Narrator Name
+                          Voice Persona Description
                         </label>
-                        <input
-                          type="text"
-                          value={voiceDisplayName}
-                          onChange={(e) => setVoiceDisplayName(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        <textarea
+                          rows={2}
+                          value={voicePersonaPrompt}
+                          onChange={(e) => setVoicePersonaPrompt(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
                         />
                       </div>
-                      <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">Voice Gender</label>
-                        <select
-                          value={voiceGender}
-                          onChange={(e) =>
-                            setVoiceGender(e.target.value as 'female' | 'male' | 'neutral')
-                          }
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[11px] text-emerald-300">
+                          Active Voice: {audioView.activeNarratorName}
+                        </span>
+                        <button
+                          type="submit"
+                          data-testid="design-voice-btn"
+                          disabled={busyAction === 'voice-design'}
+                          className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
                         >
-                          <option value="female">Female</option>
-                          <option value="male">Male</option>
-                          <option value="neutral">Neutral</option>
-                        </select>
+                          {busyAction === 'voice-design'
+                            ? 'Designing Voice...'
+                            : 'Save & Audition Voice'}
+                        </button>
                       </div>
-                    </div>
+                    </form>
 
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1">
-                        Voice Persona Description
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={voicePersonaPrompt}
-                        onChange={(e) => setVoicePersonaPrompt(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-emerald-300">
-                        Active Voice: {activeCampaign.voicePersona.displayName}
-                      </span>
-                      <button
-                        type="submit"
-                        data-testid="design-voice-btn"
-                        disabled={busyAction === 'voice-design'}
-                        className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                      >
-                        {busyAction === 'voice-design'
-                          ? 'Designing Voice...'
-                          : 'Save & Audition Voice'}
-                      </button>
-                    </div>
-                  </form>
-
-                  {activeCampaign.voicePersona.sampleAudioUrl && (
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-                      <div className="text-[11px] text-sky-300 font-semibold">
-                        Voice Sample Preview
+                    {audioView.voiceSampleAudioUrl && (
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                        <div className="text-[11px] text-sky-300 font-semibold">
+                          Voice Sample Preview
+                        </div>
+                        <audio
+                          src={audioView.voiceSampleAudioUrl}
+                          controls
+                          className="w-full h-8"
+                        />
                       </div>
-                      <audio
-                        src={activeCampaign.voicePersona.sampleAudioUrl}
-                        controls
-                        className="w-full h-8"
-                      />
-                    </div>
-                  )}
-                </section>
-              )}
+                    )}
+                  </section>
+                )}
 
-              <div className="space-y-3">
-                {activeCampaign.scenes.map((scene, idx) => {
-                  const activeVoTake = getTakeById(scene.activeTakes.voiceover_audio);
-                  return (
+                <div className="space-y-3">
+                  {audioView.scenes.map((scene) => (
                     <div
-                      key={scene.id}
+                      key={scene.sceneId}
                       className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
                     >
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-white">
-                            Scene 0{idx + 1}: {scene.title}
+                            Scene 0{scene.sceneNumber}: {scene.title}
                           </span>
-                          {scene.stale.voiceover_audio && (
+                          {scene.isStale && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold">
                               Out of Sync
                             </span>
                           )}
                         </div>
                         <p className="text-xs text-slate-300 italic">"{scene.voiceoverScript}"</p>
-                        {activeVoTake && (
+                        {scene.activeVoiceoverUrl && (
                           <audio
-                            src={activeVoTake.mediaUrl}
+                            src={scene.activeVoiceoverUrl}
                             controls
                             className="w-full max-w-md h-8 mt-2"
                           />
@@ -1355,107 +1344,107 @@ export function App() {
 
                       <button
                         type="button"
-                        data-testid={`generate-vo-${idx + 1}`}
-                        disabled={busyAction === `${scene.id}-voiceover_audio-gen`}
+                        data-testid={`generate-vo-${scene.sceneNumber}`}
+                        disabled={busyAction === `${scene.sceneId}-voiceover_audio-gen`}
                         onClick={() =>
-                          void handleGenerateSceneAsset(scene.id, 'voiceover_audio')
+                          void handleGenerateSceneAsset(scene.sceneId, 'voiceover_audio')
                         }
                         className="px-3.5 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-xs font-semibold shrink-0 cursor-pointer"
                       >
-                        {busyAction === `${scene.id}-voiceover_audio-gen`
+                        {busyAction === `${scene.sceneId}-voiceover_audio-gen`
                           ? 'Synthesizing...'
-                          : activeVoTake
-                            ? `Re-Synthesize (${activeVoTake.durationSeconds || 4}s)`
+                          : scene.activeVoiceoverUrl
+                            ? `Re-Synthesize (${scene.activeVoiceoverDurationSeconds || 4}s)`
                             : 'Synthesize Voiceover'}
                       </button>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Right 5 Cols: Campaign Soundtrack Composer */}
+              <div className="lg:col-span-5 space-y-6">
+                <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      <Music className="w-4 h-4 text-sky-400" />
+                      Campaign Soundtrack
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Composes a custom instrumental score matched to your storyboard scenes and
+                      mood.
+                    </p>
+                  </div>
+
+                  <textarea
+                    rows={2}
+                    value={activeCampaign.musicalMoodPrompt}
+                    onChange={(e) =>
+                      setActiveCampaign({
+                        ...activeCampaign,
+                        musicalMoodPrompt: e.target.value,
+                      })
+                    }
+                    onBlur={() =>
+                      void handleUpdateCampaignField({
+                        musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
+                      })
+                    }
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      data-testid="compose-lyria-35-btn"
+                      disabled={busyAction === 'music-lyria-3.5'}
+                      onClick={() => void handleGenerateMusic('lyria-3.5')}
+                      className="flex-1 py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
+                    >
+                      {busyAction === 'music-lyria-3.5'
+                        ? 'Composing Soundtrack...'
+                        : 'Compose Soundtrack'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busyAction === 'music-lyria-3-clip-preview'}
+                      onClick={() => void handleGenerateMusic('lyria-3-clip-preview')}
+                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 font-semibold text-xs cursor-pointer"
+                    >
+                      30s Preview Clip
+                    </button>
+                  </div>
+
+                  {audioView.activeMusicMediaUrl && (
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-emerald-300 font-semibold">
+                          Active Campaign Soundtrack
+                        </span>
+                        <span className="text-slate-400">Auto-ducked under voiceover</span>
+                      </div>
+                      <audio
+                        src={audioView.activeMusicMediaUrl}
+                        controls
+                        className="w-full h-8"
+                      />
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-800/80 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setActiveStage(4)}
+                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-800 text-xs font-semibold cursor-pointer"
+                    >
+                      Next: Final Cut →
+                    </button>
+                  </div>
+                </section>
               </div>
             </div>
-
-            {/* Right 5 Cols: Campaign Soundtrack Composer */}
-            <div className="lg:col-span-5 space-y-6">
-              <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <Music className="w-4 h-4 text-sky-400" />
-                    Campaign Soundtrack
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Composes a custom instrumental score matched to your storyboard scenes and
-                    mood.
-                  </p>
-                </div>
-
-                <textarea
-                  rows={2}
-                  value={activeCampaign.musicalMoodPrompt}
-                  onChange={(e) =>
-                    setActiveCampaign({
-                      ...activeCampaign,
-                      musicalMoodPrompt: e.target.value,
-                    })
-                  }
-                  onBlur={() =>
-                    void handleUpdateCampaignField({
-                      musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
-                    })
-                  }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                />
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    data-testid="compose-lyria-35-btn"
-                    disabled={busyAction === 'music-lyria-3.5'}
-                    onClick={() => void handleGenerateMusic('lyria-3.5')}
-                    className="flex-1 py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                  >
-                    {busyAction === 'music-lyria-3.5'
-                      ? 'Composing Soundtrack...'
-                      : 'Compose Soundtrack'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busyAction === 'music-lyria-3-clip-preview'}
-                    onClick={() => void handleGenerateMusic('lyria-3-clip-preview')}
-                    className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 font-semibold text-xs cursor-pointer"
-                  >
-                    30s Preview Clip
-                  </button>
-                </div>
-
-                {activeCampaign.activeMusicTakeId && (
-                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-emerald-300 font-semibold">
-                        Active Campaign Soundtrack
-                      </span>
-                      <span className="text-slate-400">Auto-ducked under voiceover</span>
-                    </div>
-                    <audio
-                      src={getTakeById(activeCampaign.activeMusicTakeId)?.mediaUrl}
-                      controls
-                      className="w-full h-8"
-                    />
-                  </div>
-                )}
-
-                <div className="pt-2 border-t border-slate-800/80 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStage(4)}
-                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-800 text-xs font-semibold cursor-pointer"
-                  >
-                    Next: Final Cut →
-                  </button>
-                </div>
-              </section>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* STEP 4: Pure Final Cut Theater (No Brand Eval Scorecard or Raw FFmpeg Clutter) */}
         {activeStage === 4 && activeCampaign && (() => {

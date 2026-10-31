@@ -179,6 +179,64 @@ export function buildSceneInspectorModalState(
   };
 }
 
+export function computeTotalStaleCount(campaign: CampaignDetail | null): number {
+  if (!campaign) return 0;
+  const sceneStaleCount = campaign.scenes.reduce((acc, s) => {
+    return (
+      acc +
+      (s.stale.keyframe_start ? 1 : 0) +
+      (s.stale.keyframe_end ? 1 : 0) +
+      (s.stale.motion_video ? 1 : 0) +
+      (s.stale.voiceover_audio ? 1 : 0)
+    );
+  }, 0);
+  return sceneStaleCount + (campaign.masterStale ? 1 : 0);
+}
+
+export interface StreamlinedAudioViewModel {
+  activeNarratorName: string;
+  voiceSampleAudioUrl?: string;
+  musicalMoodPrompt: string;
+  activeMusicMediaUrl?: string;
+  scenes: Array<{
+    sceneId: string;
+    sceneNumber: number;
+    title: string;
+    voiceoverScript: string;
+    isStale: boolean;
+    activeVoiceoverUrl?: string;
+    activeVoiceoverDurationSeconds?: number;
+  }>;
+}
+
+export function buildStreamlinedAudioViewState(
+  campaign: CampaignDetail
+): StreamlinedAudioViewModel {
+  const findTake = (takeId?: string): AssetTake | undefined =>
+    takeId ? campaign.takes.find((t) => t.id === takeId) : undefined;
+
+  const musicTake = findTake(campaign.activeMusicTakeId);
+
+  return {
+    activeNarratorName: campaign.voicePersona.displayName,
+    voiceSampleAudioUrl: campaign.voicePersona.sampleAudioUrl,
+    musicalMoodPrompt: campaign.musicalMoodPrompt,
+    activeMusicMediaUrl: musicTake?.mediaUrl,
+    scenes: campaign.scenes.map((scene, idx) => {
+      const voTake = findTake(scene.activeTakes.voiceover_audio);
+      return {
+        sceneId: scene.id,
+        sceneNumber: idx + 1,
+        title: scene.title,
+        voiceoverScript: scene.voiceoverScript,
+        isStale: Boolean(scene.stale.voiceover_audio),
+        activeVoiceoverUrl: voTake?.mediaUrl,
+        activeVoiceoverDurationSeconds: voTake?.durationSeconds,
+      };
+    }),
+  };
+}
+
 export interface FinalCutTheaterViewModel {
   masterVideoUrl?: string;
   masterStale: boolean;
