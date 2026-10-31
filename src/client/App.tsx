@@ -36,8 +36,12 @@ import {
   SIMPLIFIED_STEPS,
   computeSimplifiedStepReadiness,
   buildCalmBriefViewState,
+  buildVisualSceneCards,
+  buildSceneInspectorModalState,
   type SimplifiedStepNumber,
+  type StoryboardMediaPreviewMode,
 } from './viewModel/studioViewModel.js';
+import { SceneInspectorModal } from './components/SceneInspectorModal.js';
 
 export function App() {
   const [brandKits, setBrandKits] = useState<BrandKit[]>([]);
@@ -48,6 +52,13 @@ export function App() {
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [events, setEvents] = useState<StudioSSEEvent[]>([]);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+
+  // Unified Step 2 Storyboard & Visuals UI state
+  const [storyboardPreviewMode, setStoryboardPreviewMode] =
+    useState<StoryboardMediaPreviewMode>('image');
+  const [showReferenceAnchorsDrawer, setShowReferenceAnchorsDrawer] = useState(false);
+  const [showAddSceneDrawer, setShowAddSceneDrawer] = useState(false);
+  const [inspectedSceneId, setInspectedSceneId] = useState<string | null>(null);
 
   // Per-scene conversational edit prompt state
   const [sceneEditPrompts, setSceneEditPrompts] = useState<Record<string, string>>({});
@@ -865,722 +876,433 @@ export function App() {
           );
         })()}
 
-        {/* STAGE 2: AI Storyboard & Non-Linear Scene Canvas */}
-        {activeStage === 2 && activeCampaign && (
-          <div className="space-y-6">
-            <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Clapperboard className="w-4 h-4 text-sky-400" />
-                  Stage 2 — AI Storyboard & Non-Linear Scene Canvas
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Generated with <code className="text-sky-300">gemini-3.8-flash</code> Structured
-                  Outputs. Editing any prompt or script automatically marks downstream keyframes,
-                  motion clips, or voiceovers as{' '}
-                  <span className="text-amber-300 font-semibold">Stale / Out of Sync</span> without
-                  deleting prior takes.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  data-testid="stage2-regenerate-storyboard-btn"
-                  disabled={busyAction === 'generate-storyboard'}
-                  onClick={() => void handleGenerateStoryboard()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {busyAction === 'generate-storyboard'
-                    ? 'Generating via gemini-3.8-flash...'
-                    : activeCampaign.scenes.length > 0
-                      ? 'Regenerate AI Storyboard'
-                      : 'Generate AI Storyboard'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveStage(3)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-semibold cursor-pointer"
-                >
-                  Next: Keyframe Studio (Stage 3) →
-                </button>
-              </div>
-            </div>
+        {/* STEP 2: Unified Visual Storyboard & On-Demand Scene Inspector Modal */}
+        {activeStage === 2 && activeCampaign && (() => {
+          const sceneCards = buildVisualSceneCards(activeCampaign, storyboardPreviewMode);
+          const inspectorModalState = buildSceneInspectorModalState(
+            activeCampaign,
+            inspectedSceneId
+          );
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {activeCampaign.scenes.map((scene, idx) => (
-                <div
-                  key={scene.id}
-                  data-testid={`scene-card-${idx + 1}`}
-                  className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between space-y-4"
+          return (
+            <div className="space-y-6">
+              {/* Top Storyboard Action & Preview Mode Bar */}
+              <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="inline-flex rounded-full bg-slate-950 border border-slate-800 p-1">
+                    <button
+                      type="button"
+                      data-testid="storyboard-preview-mode-image"
+                      onClick={() => setStoryboardPreviewMode('image')}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        storyboardPreviewMode === 'image'
+                          ? 'bg-sky-500 text-slate-950'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Keyframes
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="storyboard-preview-mode-video"
+                      onClick={() => setStoryboardPreviewMode('video')}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        storyboardPreviewMode === 'video'
+                          ? 'bg-sky-500 text-slate-950'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <Film className="w-3.5 h-3.5" />
+                      Motion Clips
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    data-testid="toggle-reference-anchors-btn"
+                    onClick={() => setShowReferenceAnchorsDrawer((v) => !v)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 cursor-pointer"
+                  >
+                    Reference Anchors ({activeCampaign.anchors.length})
+                  </button>
+
+                  <button
+                    type="button"
+                    data-testid="toggle-add-scene-btn"
+                    onClick={() => setShowAddSceneDrawer((v) => !v)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-sky-300 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Scene
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    data-testid="stage2-regenerate-storyboard-btn"
+                    disabled={busyAction === 'generate-storyboard'}
+                    onClick={() => void handleGenerateStoryboard()}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold cursor-pointer"
+                  >
+                    {busyAction === 'generate-storyboard'
+                      ? 'Generating Storyboard...'
+                      : 'Regenerate Storyboard'}
+                  </button>
+
+                  {storyboardPreviewMode === 'image' ? (
+                    <button
+                      type="button"
+                      data-testid="batch-generate-keyframes-btn"
+                      disabled={busyAction === 'batch-keyframe_start'}
+                      onClick={() => void handleBatchGenerate('keyframe_start')}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {busyAction === 'batch-keyframe_start'
+                        ? 'Generating All Keyframes...'
+                        : 'Generate All Keyframes'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      data-testid="batch-generate-motion-btn"
+                      disabled={busyAction === 'batch-motion_video'}
+                      onClick={() => void handleBatchGenerate('motion_video')}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {busyAction === 'batch-motion_video'
+                        ? 'Synthesizing All Motion Clips...'
+                        : 'Synthesize All Motion Clips'}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveStage(3)}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-800 text-xs font-semibold cursor-pointer"
+                  >
+                    Next: Voice & Soundtrack →
+                  </button>
+                </div>
+              </div>
+
+              {/* Collapsible Reference Anchors Drawer */}
+              {showReferenceAnchorsDrawer && (
+                <section
+                  data-testid="reference-anchors-drawer"
+                  className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                        SCENE 0{idx + 1} · {scene.targetDurationSeconds}s
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {(scene.stale.keyframe_start ||
-                          scene.stale.motion_video ||
-                          scene.stale.voiceover_audio) && (
-                          <span
-                            data-testid={`scene-stale-pill-${idx + 1}`}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold"
-                          >
-                            Stale Downstream:{' '}
-                            {[
-                              scene.stale.keyframe_start ? 'Keyframe' : null,
-                              scene.stale.motion_video ? 'Motion' : null,
-                              scene.stale.voiceover_audio ? 'Voiceover' : null,
-                            ]
-                              .filter(Boolean)
-                              .join(', ')}
-                          </span>
-                        )}
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-sky-400">
+                        Subject Reference Anchors
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Reference images keep aircraft liveries, cockpit hardware, and crew visually
+                        consistent across all scenes.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="toggle-new-anchor-btn"
+                      onClick={() => setShowNewAnchorForm((v) => !v)}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      New Reference Anchor
+                    </button>
+                  </div>
+
+                  {showNewAnchorForm && (
+                    <form
+                      onSubmit={handleCreateReferenceAnchor}
+                      className="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+                    >
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Anchor Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., CX-900 CryoNacelle"
+                          value={newAnchorName}
+                          onChange={(e) => setNewAnchorName(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">Category</label>
+                        <select
+                          value={newAnchorCategory}
+                          onChange={(e) =>
+                            setNewAnchorCategory(
+                              e.target.value as
+                                | 'aircraft'
+                                | 'cockpit'
+                                | 'crew'
+                                | 'logo'
+                                | 'environment'
+                            )
+                          }
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        >
+                          <option value="aircraft">aircraft</option>
+                          <option value="cockpit">cockpit</option>
+                          <option value="crew">crew</option>
+                          <option value="logo">logo</option>
+                          <option value="environment">environment</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">
+                          Visual Generation Prompt
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Describe livery, materials, lighting..."
+                          value={newAnchorPrompt}
+                          onChange={(e) => setNewAnchorPrompt(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={busyAction === 'create-anchor'}
+                        className="py-1.5 px-3 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs cursor-pointer"
+                      >
+                        {busyAction === 'create-anchor'
+                          ? 'Generating Anchor...'
+                          : 'Create & Generate'}
+                      </button>
+                    </form>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {activeCampaign.anchors.map((anchor) => (
+                      <div
+                        key={anchor.id}
+                        className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between gap-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                              {anchor.category}
+                            </span>
+                            <h4 className="text-xs font-bold text-white mt-1.5">{anchor.name}</h4>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              {anchor.description}
+                            </p>
+                          </div>
+                          {anchor.imageUrl && (
+                            <img
+                              src={anchor.imageUrl}
+                              alt={anchor.name}
+                              className="w-16 h-16 rounded-lg object-cover border border-sky-500/40 shrink-0"
+                            />
+                          )}
+                        </div>
                         <button
                           type="button"
-                          title="Delete Scene"
-                          onClick={() => void handleDeleteScene(scene.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 cursor-pointer"
+                          data-testid={`generate-anchor-${anchor.id}`}
+                          disabled={busyAction === `anchor-${anchor.id}`}
+                          onClick={() => void handleGenerateAnchor(anchor.id)}
+                          className="w-full py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-sky-300 flex items-center justify-center gap-1.5 cursor-pointer"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          {busyAction === `anchor-${anchor.id}`
+                            ? 'Synthesizing...'
+                            : anchor.imageUrl
+                              ? 'Regenerate Anchor'
+                              : 'Generate Anchor'}
                         </button>
                       </div>
-                    </div>
-
-                    <input
-                      type="text"
-                      value={scene.title}
-                      onChange={(e) => {
-                        const next = activeCampaign.scenes.map((s) =>
-                          s.id === scene.id ? { ...s, title: e.target.value } : s
-                        );
-                        setActiveCampaign({ ...activeCampaign, scenes: next });
-                      }}
-                      onBlur={(e) =>
-                        void handlePatchScene(scene.id, { title: e.target.value })
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-sm font-bold text-white"
-                    />
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-sky-300 mb-1">
-                        Nano Banana 2.1 Visual Keyframe Prompt
-                      </label>
-                      <textarea
-                        rows={3}
-                        data-testid={`scene-visual-prompt-${idx + 1}`}
-                        value={scene.visualPrompt}
-                        onChange={(e) => {
-                          const next = activeCampaign.scenes.map((s) =>
-                            s.id === scene.id ? { ...s, visualPrompt: e.target.value } : s
-                          );
-                          setActiveCampaign({ ...activeCampaign, scenes: next });
-                        }}
-                        onBlur={(e) =>
-                          void handlePatchScene(scene.id, { visualPrompt: e.target.value })
-                        }
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-indigo-300 mb-1">
-                        Omni 1.1 Flash Camera & Motion Directive
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={scene.cameraMotionDirective}
-                        onChange={(e) => {
-                          const next = activeCampaign.scenes.map((s) =>
-                            s.id === scene.id
-                              ? { ...s, cameraMotionDirective: e.target.value }
-                              : s
-                          );
-                          setActiveCampaign({ ...activeCampaign, scenes: next });
-                        }}
-                        onBlur={(e) =>
-                          void handlePatchScene(scene.id, {
-                            cameraMotionDirective: e.target.value,
-                          })
-                        }
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-emerald-300 mb-1">
-                        Gemini 3.8 TTS Narration Script
-                      </label>
-                      <textarea
-                        rows={2}
-                        data-testid={`scene-voiceover-script-${idx + 1}`}
-                        value={scene.voiceoverScript}
-                        onChange={(e) => {
-                          const next = activeCampaign.scenes.map((s) =>
-                            s.id === scene.id ? { ...s, voiceoverScript: e.target.value } : s
-                          );
-                          setActiveCampaign({ ...activeCampaign, scenes: next });
-                        }}
-                        onBlur={(e) =>
-                          void handlePatchScene(scene.id, {
-                            voiceoverScript: e.target.value,
-                          })
-                        }
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                      />
-                    </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
+                </section>
+              )}
 
-            {/* Add Custom Scene Form */}
-            <form
-              onSubmit={(e) => void handleAddScene(e)}
-              className="bg-[#0D1326] border border-slate-800/80 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
-            >
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">New Scene Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Mach 1.8 Stratospheric Climb"
-                  value={newSceneTitle}
-                  onChange={(e) => setNewSceneTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Visual Prompt</label>
-                <input
-                  type="text"
-                  placeholder="Keyframe visual composition..."
-                  value={newSceneVisualPrompt}
-                  onChange={(e) => setNewSceneVisualPrompt(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Camera Motion</label>
-                <input
-                  type="text"
-                  placeholder="24fps tracking dolly..."
-                  value={newSceneMotion}
-                  onChange={(e) => setNewSceneMotion(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Voiceover Line</label>
-                <input
-                  type="text"
-                  placeholder="Spoken narration line..."
-                  value={newSceneVoiceover}
-                  onChange={(e) => setNewSceneVoiceover(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-              <button
-                type="submit"
-                className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-semibold cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Scene to Canvas
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* STAGE 3: Keyframe & Reference Anchor Studio (gemini-nano-banana-2.1) */}
-        {activeStage === 3 && activeCampaign && (
-          <div className="space-y-6">
-            {/* Reference Anchors Section */}
-            <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-sky-400">
-                    Reusable Brand & Subject Reference Anchors (gemini-nano-banana-2.1)
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Reference anchor images are fused into every scene keyframe request (up to 14
-                    references) so Cymbal aircraft liveries, avionics hardware, and crew stay
-                    visually locked across shots.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  data-testid="toggle-new-anchor-btn"
-                  onClick={() => setShowNewAnchorForm((v) => !v)}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  New Reference Anchor
-                </button>
-              </div>
-
-              {showNewAnchorForm && (
+              {/* Collapsible Add Scene Drawer */}
+              {showAddSceneDrawer && (
                 <form
-                  onSubmit={handleCreateReferenceAnchor}
-                  className="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+                  onSubmit={(e) => {
+                    void handleAddScene(e);
+                    setShowAddSceneDrawer(false);
+                  }}
+                  className="bg-[#0D1326] border border-slate-800/80 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-5 gap-3 items-end"
                 >
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Anchor Name</label>
+                    <label className="block text-[11px] text-slate-400 mb-1">New Scene Title</label>
                     <input
                       type="text"
-                      placeholder="e.g., CX-900 CryoNacelle"
-                      value={newAnchorName}
-                      onChange={(e) => setNewAnchorName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      placeholder="e.g. Mach 1.8 Stratospheric Climb"
+                      value={newSceneTitle}
+                      onChange={(e) => setNewSceneTitle(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Category</label>
-                    <select
-                      value={newAnchorCategory}
-                      onChange={(e) =>
-                        setNewAnchorCategory(
-                          e.target.value as 'aircraft' | 'cockpit' | 'crew' | 'logo' | 'environment'
-                        )
-                      }
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                    >
-                      <option value="aircraft">aircraft</option>
-                      <option value="cockpit">cockpit</option>
-                      <option value="crew">crew</option>
-                      <option value="logo">logo</option>
-                      <option value="environment">environment</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">
-                      Visual Generation Prompt
-                    </label>
+                    <label className="block text-[11px] text-slate-400 mb-1">Visual Prompt</label>
                     <input
                       type="text"
-                      placeholder="Describe livery, materials, lighting..."
-                      value={newAnchorPrompt}
-                      onChange={(e) => setNewAnchorPrompt(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      placeholder="Keyframe visual composition..."
+                      value={newSceneVisualPrompt}
+                      onChange={(e) => setNewSceneVisualPrompt(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Camera Motion</label>
+                    <input
+                      type="text"
+                      placeholder="24fps tracking dolly..."
+                      value={newSceneMotion}
+                      onChange={(e) => setNewSceneMotion(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Voiceover Line</label>
+                    <input
+                      type="text"
+                      placeholder="Spoken narration line..."
+                      value={newSceneVoiceover}
+                      onChange={(e) => setNewSceneVoiceover(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={busyAction === 'create-anchor'}
-                    className="py-1.5 px-3 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-sky-500 text-slate-950 text-xs font-bold cursor-pointer"
                   >
-                    {busyAction === 'create-anchor'
-                      ? 'Generating Anchor...'
-                      : 'Create & Generate Anchor'}
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Scene
                   </button>
                 </form>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {activeCampaign.anchors.map((anchor) => (
-                  <div
-                    key={anchor.id}
-                    className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-col justify-between gap-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
-                          {anchor.category}
-                        </span>
-                        <h3 className="text-xs font-bold text-white mt-1.5">{anchor.name}</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5">{anchor.description}</p>
-                      </div>
-                      {anchor.imageUrl && (
-                        <img
-                          src={anchor.imageUrl}
-                          alt={anchor.name}
-                          className="w-16 h-16 rounded-lg object-cover border border-sky-500/40 shrink-0"
-                        />
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      data-testid={`generate-anchor-${anchor.id}`}
-                      disabled={busyAction === `anchor-${anchor.id}`}
-                      onClick={() => void handleGenerateAnchor(anchor.id)}
-                      className="w-full py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-sky-300 flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      {busyAction === `anchor-${anchor.id}`
-                        ? 'Synthesizing Anchor...'
-                        : anchor.imageUrl
-                          ? 'Regenerate Reference Anchor'
-                          : 'Generate Reference Anchor (Nano Banana 2.1)'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Scene Keyframes Section */}
-            <section className="space-y-4">
-              <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-sky-400" />
-                    Stage 3 — Scene Keyframes & Stateful Conversational Editing
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Powered by <code className="text-sky-300">gemini-nano-banana-2.1</code> with
-                    multi-image reference fusion and stateful{' '}
-                    <code className="text-sky-300">previous_interaction_id</code> turn editing.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    data-testid="batch-generate-keyframes-btn"
-                    disabled={busyAction === 'batch-keyframe_start'}
-                    onClick={() => void handleBatchGenerate('keyframe_start')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {busyAction === 'batch-keyframe_start'
-                      ? 'Generating All Keyframes in Parallel...'
-                      : 'Generate All Scene Keyframes (Parallel)'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveStage(4)}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-semibold cursor-pointer"
-                  >
-                    Next: Motion Synthesis (Stage 4) →
-                  </button>
-                </div>
-              </div>
-
+              {/* Visual-First Storyboard Scene Cards Grid (Zero Open Textareas!) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {activeCampaign.scenes.map((scene, idx) => {
-                  const activeKfTake = getTakeById(scene.activeTakes.keyframe_start);
-                  const kfTakes = getSceneTakes(scene.id, 'keyframe_start');
-                  const editKey = `${scene.id}-keyframe_start`;
-
-                  return (
-                    <div
-                      key={scene.id}
-                      className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between space-y-4"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white">
-                            0{idx + 1}. {scene.title}
+                {sceneCards.map((card) => (
+                  <div
+                    key={card.sceneId}
+                    data-testid={`scene-card-${card.sceneNumber}`}
+                    className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-slate-700 transition"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                          Scene 0{card.sceneNumber} · {card.targetDurationSeconds}s
+                        </span>
+                        {card.staleSummary && (
+                          <span
+                            data-testid={`scene-stale-pill-${card.sceneNumber}`}
+                            className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold"
+                          >
+                            {card.staleSummary}
                           </span>
-                          {scene.stale.keyframe_start && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold">
-                              Stale / Out of Sync
-                            </span>
-                          )}
-                        </div>
+                        )}
+                      </div>
 
-                        {/* Keyframe Preview Box */}
-                        <div className="aspect-video rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center relative">
-                          {activeKfTake ? (
-                            <img
-                              src={activeKfTake.mediaUrl}
-                              alt={scene.title}
+                      {/* 16:9 Visual Preview Frame */}
+                      <div className="aspect-video rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center relative">
+                        {card.previewMode === 'video' ? (
+                          card.activeMediaUrl ? (
+                            <video
+                              src={card.activeMediaUrl}
+                              controls
+                              loop
+                              muted
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <div className="text-center p-4 text-xs text-slate-500">
-                              No keyframe generated yet
+                              No motion clip generated yet
                             </div>
-                          )}
-                          {activeKfTake && (
-                            <div className="absolute bottom-2 left-2 right-2 bg-slate-950/85 backdrop-blur px-2.5 py-1 rounded text-[10px] font-mono text-slate-300 flex items-center justify-between">
-                              <span>ID: {activeKfTake.interactionId}</span>
-                              {activeKfTake.parentInteractionId && (
-                                <span className="text-sky-400">
-                                  ↳ Edited from {activeKfTake.parentInteractionId}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-slate-400 line-clamp-2">{scene.visualPrompt}</p>
-
-                        {/* Generate / Re-roll Button */}
-                        <button
-                          type="button"
-                          data-testid={`generate-kf-${idx + 1}`}
-                          disabled={busyAction === `${scene.id}-keyframe_start-gen`}
-                          onClick={() =>
-                            void handleGenerateSceneAsset(scene.id, 'keyframe_start')
-                          }
-                          className="w-full py-1.5 px-3 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-xs font-semibold cursor-pointer"
-                        >
-                          {busyAction === `${scene.id}-keyframe_start-gen`
-                            ? 'Synthesizing via Nano Banana 2.1...'
-                            : activeKfTake
-                              ? 'Generate Fresh Keyframe Take'
-                              : 'Generate Start Keyframe (Nano Banana 2.1)'}
-                        </button>
-
-                        {/* Stateful Conversational Turn Edit Input */}
-                        {activeKfTake && (
-                          <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                            <label className="block text-[11px] font-semibold text-sky-300">
-                              Conversational Turn Edit (previous_interaction_id)
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                data-testid={`edit-kf-input-${idx + 1}`}
-                                placeholder="e.g. Add golden sunset flare on fuselage..."
-                                value={sceneEditPrompts[editKey] || ''}
-                                onChange={(e) =>
-                                  setSceneEditPrompts((prev) => ({
-                                    ...prev,
-                                    [editKey]: e.target.value,
-                                  }))
-                                }
-                                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                              />
-                              <button
-                                type="button"
-                                data-testid={`edit-kf-submit-${idx + 1}`}
-                                disabled={!sceneEditPrompts[editKey]?.trim()}
-                                onClick={() =>
-                                  void handleGenerateSceneAsset(scene.id, 'keyframe_start', {
-                                    promptOverride: sceneEditPrompts[editKey],
-                                    conversationalEdit: true,
-                                  })
-                                }
-                                className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-bold text-xs cursor-pointer disabled:opacity-40"
-                              >
-                                Edit
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Take History Selector */}
-                        {kfTakes.length > 0 && (
-                          <div className="pt-2 border-t border-slate-800/80">
-                            <label className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">
-                              Take History ({kfTakes.length} saved in Vault)
-                            </label>
-                            <select
-                              aria-label={`Keyframe Take History Scene ${idx + 1}`}
-                              value={scene.activeTakes.keyframe_start || ''}
-                              onChange={(e) =>
-                                void handleSwitchActiveTake(
-                                  scene.id,
-                                  'keyframe_start',
-                                  e.target.value
-                                )
-                              }
-                              className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-200 font-mono"
-                            >
-                              {kfTakes.map((t, tIdx) => (
-                                <option key={t.id} value={t.id}>
-                                  Take #{kfTakes.length - tIdx} ({t.id}) — {t.prompt.slice(0, 38)}...
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* STAGE 4: Motion Video Synthesis (gemini-omni-1.1-flash) */}
-        {activeStage === 4 && activeCampaign && (
-          <div className="space-y-6">
-            <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Film className="w-4 h-4 text-sky-400" />
-                  Stage 4 — Keyframe-Locked Motion Synthesis & Conversational Video Editing
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Powered by <code className="text-sky-300">gemini-omni-1.1-flash</code>. Locks
-                  motion generation to each scene’s approved Nano Banana 2.1 start keyframe and
-                  supports stateful conversational video refinement & tail extensions.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  data-testid="batch-generate-motion-btn"
-                  disabled={busyAction === 'batch-motion_video'}
-                  onClick={() => void handleBatchGenerate('motion_video')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {busyAction === 'batch-motion_video'
-                    ? 'Synthesizing All Motion Clips...'
-                    : 'Synthesize All Motion Clips (Parallel)'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveStage(5)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-semibold cursor-pointer"
-                >
-                  Next: Voiceover & Music Score (Stage 5) →
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {activeCampaign.scenes.map((scene, idx) => {
-                const activeVidTake = getTakeById(scene.activeTakes.motion_video);
-                const activeKfTake = getTakeById(scene.activeTakes.keyframe_start);
-                const vidTakes = getSceneTakes(scene.id, 'motion_video');
-                const editKey = `${scene.id}-motion_video`;
-
-                return (
-                  <div
-                    key={scene.id}
-                    className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">
-                          0{idx + 1}. {scene.title}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {activeKfTake && (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono">
-                              Locked to KF {activeKfTake.id}
-                            </span>
-                          )}
-                          {scene.stale.motion_video && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold">
-                              Stale / Out of Sync
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="aspect-video rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex items-center justify-center relative">
-                        {activeVidTake ? (
-                          <video
-                            src={activeVidTake.mediaUrl}
-                            controls
-                            loop
-                            muted
+                          )
+                        ) : card.activeMediaUrl ? (
+                          <img
+                            src={card.activeMediaUrl}
+                            alt={card.title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="text-center p-4 text-xs text-slate-500">
-                            No motion video synthesized yet
+                            No keyframe generated yet
                           </div>
                         )}
                       </div>
 
-                      <p className="text-xs text-slate-400">{scene.cameraMotionDirective}</p>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{card.title}</h3>
+                        <p className="text-xs text-slate-400 italic line-clamp-2 mt-1">
+                          "{card.spokenNarrationPreview}"
+                        </p>
+                      </div>
+                    </div>
 
-                      <div className="flex gap-2">
+                    {/* Clean Card Footer Actions */}
+                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      {card.previewMode === 'video' ? (
                         <button
                           type="button"
-                          data-testid={`generate-motion-${idx + 1}`}
-                          disabled={busyAction === `${scene.id}-motion_video-gen`}
+                          data-testid={`generate-motion-${card.sceneNumber}`}
+                          disabled={busyAction === `${card.sceneId}-motion_video-gen`}
                           onClick={() =>
-                            void handleGenerateSceneAsset(scene.id, 'motion_video')
+                            void handleGenerateSceneAsset(card.sceneId, 'motion_video')
                           }
                           className="flex-1 py-1.5 px-3 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-xs font-semibold cursor-pointer"
                         >
-                          {busyAction === `${scene.id}-motion_video-gen`
+                          {busyAction === `${card.sceneId}-motion_video-gen`
                             ? 'Synthesizing...'
-                            : activeVidTake
-                              ? 'Re-Synthesize Motion'
-                              : 'Synthesize Motion (Omni 1.1)'}
+                            : card.hasMotionVideo
+                              ? 'Regenerate Motion'
+                              : 'Generate Motion'}
                         </button>
-
-                        {activeVidTake && (
-                          <button
-                            type="button"
-                            data-testid={`extend-motion-${idx + 1}`}
-                            disabled={busyAction === `${scene.id}-motion_video-ext`}
-                            onClick={() =>
-                              void handleGenerateSceneAsset(scene.id, 'motion_video', {
-                                extendVideo: true,
-                              })
-                            }
-                            className="py-1.5 px-3 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-xs font-semibold cursor-pointer"
-                          >
-                            +4s Extend
-                          </button>
-                        )}
-                      </div>
-
-                      {activeVidTake && (
-                        <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                          <label className="block text-[11px] font-semibold text-sky-300">
-                            Conversational Video Edit (previous_interaction_id)
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="e.g. Slow down camera dolly and add contrail vapor..."
-                              value={sceneEditPrompts[editKey] || ''}
-                              onChange={(e) =>
-                                setSceneEditPrompts((prev) => ({
-                                  ...prev,
-                                  [editKey]: e.target.value,
-                                }))
-                              }
-                              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                            />
-                            <button
-                              type="button"
-                              disabled={!sceneEditPrompts[editKey]?.trim()}
-                              onClick={() =>
-                                void handleGenerateSceneAsset(scene.id, 'motion_video', {
-                                  promptOverride: sceneEditPrompts[editKey],
-                                  conversationalEdit: true,
-                                })
-                              }
-                              className="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-bold text-xs cursor-pointer disabled:opacity-40"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          data-testid={`generate-kf-${card.sceneNumber}`}
+                          disabled={busyAction === `${card.sceneId}-keyframe_start-gen`}
+                          onClick={() =>
+                            void handleGenerateSceneAsset(card.sceneId, 'keyframe_start')
+                          }
+                          className="flex-1 py-1.5 px-3 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-xs font-semibold cursor-pointer"
+                        >
+                          {busyAction === `${card.sceneId}-keyframe_start-gen`
+                            ? 'Generating...'
+                            : card.hasKeyframe
+                              ? 'Regenerate Keyframe'
+                              : 'Generate Keyframe'}
+                        </button>
                       )}
 
-                      {vidTakes.length > 0 && (
-                        <div className="pt-2 border-t border-slate-800/80">
-                          <label className="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">
-                            Motion Take History ({vidTakes.length})
-                          </label>
-                          <select
-                            value={scene.activeTakes.motion_video || ''}
-                            onChange={(e) =>
-                              void handleSwitchActiveTake(
-                                scene.id,
-                                'motion_video',
-                                e.target.value
-                              )
-                            }
-                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-200 font-mono"
-                          >
-                            {vidTakes.map((t, tIdx) => (
-                              <option key={t.id} value={t.id}>
-                                Take #{vidTakes.length - tIdx} ({t.durationSeconds || 6}s) —{' '}
-                                {t.interactionId}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
+                      <button
+                        type="button"
+                        data-testid={`open-scene-inspector-${card.sceneNumber}`}
+                        onClick={() => setInspectedSceneId(card.sceneId)}
+                        className="py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold cursor-pointer"
+                      >
+                        Edit Scene
+                      </button>
                     </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              {/* On-Demand Scene Inspector Modal */}
+              <SceneInspectorModal
+                modalState={inspectorModalState}
+                busyAction={busyAction}
+                onClose={() => setInspectedSceneId(null)}
+                onPatchScene={handlePatchScene}
+                onDeleteScene={handleDeleteScene}
+                onGenerateSceneAsset={handleGenerateSceneAsset}
+                onSwitchActiveTake={handleSwitchActiveTake}
+              />
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* STAGE 5: Voiceover (gemini-3.8-flash-tts) & Music Score (lyria-3.5) */}
         {activeStage === 5 && activeCampaign && (
