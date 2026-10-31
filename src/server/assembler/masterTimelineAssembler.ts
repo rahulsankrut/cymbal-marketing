@@ -22,30 +22,53 @@ export class MasterTimelineAssembler {
   }
 
   /**
-   * Probes media duration from WAV header or via ffmpeg stderr, falling back to AssetTake.durationSeconds.
+   * Probes real media duration from MP4 mvhd atom or WAV RIFF header on disk first,
+   * falling back to AssetTake.durationSeconds for synthetic unit-test buffers.
    */
   public probeDurationSeconds(take?: AssetTake, fallbackSeconds = 6): number {
     if (!take) return fallbackSeconds;
-    if (typeof take.durationSeconds === 'number' && take.durationSeconds > 0) {
-      return take.durationSeconds;
-    }
 
     const fileName = basename(take.mediaUrl.replace(/^\/media\//, ''));
     const fullPath = join(this.vault.getMediaDir(), fileName);
-    if (!existsSync(fullPath)) return fallbackSeconds;
-
-    try {
-      const buf = readFileSync(fullPath);
-      // Fast PCM WAV header duration calculation
-      if (buf.length >= 44 && buf.toString('ascii', 0, 4) === 'RIFF') {
-        const byteRate = buf.readUInt32LE(28);
-        const dataSize = buf.readUInt32LE(40);
-        if (byteRate > 0 && dataSize > 0) {
-          return Number((dataSize / byteRate).toFixed(2));
+    if (existsSync(fullPath)) {
+      try {
+        const buf = readFileSync(fullPath);
+        // 1. Fast MP4 mvhd (Movie Header Atom) duration calculation for real video takes
+        if (buf.length > 256) {
+          const mvhdIdx = buf.indexOf(Buffer.from('mvhd'));
+          if (mvhdIdx !== -1 && mvhdIdx + 24 <= buf.length) {
+            const version = buf.readUInt8(mvhdIdx + 4);
+            const timescale =
+              version === 1
+                ? buf.readUInt32BE(mvhdIdx + 20)
+                : buf.readUInt32BE(mvhdIdx + 16);
+            const durationUnits =
+              version === 1 && mvhdIdx + 32 <= buf.length
+                ? Number(buf.readBigUInt64BE(mvhdIdx + 24))
+                : buf.readUInt32BE(mvhdIdx + 20);
+            if (timescale > 0 && durationUnits > 0) {
+              const mp4Seconds = Number((durationUnits / timescale).toFixed(2));
+              if (mp4Seconds >= 1 && mp4Seconds <= 300) {
+                return mp4Seconds;
+              }
+            }
+          }
         }
+        // 2. Fast PCM WAV header duration calculation
+        if (buf.length >= 44 && buf.toString('ascii', 0, 4) === 'RIFF') {
+          const byteRate = buf.readUInt32LE(28);
+          const dataSize = buf.readUInt32LE(40);
+          if (byteRate > 0 && dataSize > 0) {
+            return Number((dataSize / byteRate).toFixed(2));
+          }
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
+    }
+
+    if (typeof take.durationSeconds === 'number' && take.durationSeconds > 0) {
+      return take.durationSeconds;
     }
 
     return fallbackSeconds;

@@ -593,6 +593,30 @@ export class CampaignVault {
       (input.mediaBase64 ? Buffer.from(input.mediaBase64, 'base64') : Buffer.alloc(0));
     writeFileSync(diskPath, buffer);
 
+    // If buffer is a real MP4 container with an mvhd atom, use its actual duration
+    let actualDurationSeconds = input.durationSeconds;
+    if (buffer.length > 256 && (ext === 'mp4' || input.mimeType.includes('video'))) {
+      const mvhdIdx = buffer.indexOf(Buffer.from('mvhd'));
+      if (mvhdIdx !== -1 && mvhdIdx + 24 <= buffer.length) {
+        const version = buffer.readUInt8(mvhdIdx + 4);
+        const timescale =
+          version === 1
+            ? buffer.readUInt32BE(mvhdIdx + 20)
+            : buffer.readUInt32BE(mvhdIdx + 16);
+        const durationUnits =
+          version === 1 && mvhdIdx + 32 <= buffer.length
+            ? Number(buffer.readBigUInt64BE(mvhdIdx + 24))
+            : buffer.readUInt32BE(mvhdIdx + 20);
+        if (timescale > 0 && durationUnits > 0) {
+          const parsedSec = Number((durationUnits / timescale).toFixed(2));
+          if (parsedSec >= 1 && parsedSec <= 300) {
+            actualDurationSeconds =
+              input.modality === 'motion_video' ? Math.round(parsedSec) : parsedSec;
+          }
+        }
+      }
+    }
+
     const now = new Date().toISOString();
     const take: AssetTake = {
       id: takeId,
@@ -605,7 +629,7 @@ export class CampaignVault {
       prompt: input.prompt,
       mediaUrl: `/media/${fileName}`,
       mimeType: input.mimeType,
-      durationSeconds: input.durationSeconds,
+      durationSeconds: actualDurationSeconds,
       tokenUsage: input.tokenUsage,
       latencyMs: input.latencyMs,
       createdAt: now,
@@ -630,6 +654,13 @@ export class CampaignVault {
         if (scene) {
           const previousActiveTakeId = scene.activeTakes[input.modality];
           scene.activeTakes[input.modality] = take.id;
+          if (
+            input.modality === 'motion_video' &&
+            typeof actualDurationSeconds === 'number' &&
+            actualDurationSeconds > 0
+          ) {
+            scene.targetDurationSeconds = Math.round(actualDurationSeconds);
+          }
           if (
             input.modality === 'keyframe_start' ||
             input.modality === 'keyframe_end' ||
