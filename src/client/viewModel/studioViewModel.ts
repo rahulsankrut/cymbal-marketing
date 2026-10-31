@@ -1,0 +1,228 @@
+import type {
+  AssetTake,
+  CampaignDetail,
+  Modality,
+  Scene,
+  StarterCampaignTemplate,
+  StudioStageNumber,
+} from '../../shared/types.js';
+
+export type SimplifiedStepNumber = 1 | 2 | 3 | 4;
+
+export interface SimplifiedStepMeta {
+  number: SimplifiedStepNumber;
+  label: string;
+}
+
+export const SIMPLIFIED_STEPS: ReadonlyArray<SimplifiedStepMeta> = [
+  { number: 1, label: '1. Brief' },
+  { number: 2, label: '2. Storyboard & Visuals' },
+  { number: 3, label: '3. Voice & Soundtrack' },
+  { number: 4, label: '4. Final Cut' },
+];
+
+export function mapBackendStageToStep(stage: StudioStageNumber): SimplifiedStepNumber {
+  if (stage <= 1) return 1;
+  if (stage <= 4) return 2;
+  if (stage === 5) return 3;
+  return 4;
+}
+
+export function computeSimplifiedStepReadiness(
+  campaign: CampaignDetail | null
+): Record<SimplifiedStepNumber, boolean> {
+  if (!campaign) {
+    return { 1: false, 2: false, 3: false, 4: false };
+  }
+  const hasBrief = Boolean(campaign.title.trim() && campaign.creativeBrief.trim());
+  const hasStoryboard = campaign.scenes.length > 0;
+  const hasAudio =
+    Boolean(campaign.activeMusicTakeId) ||
+    campaign.scenes.some((s) => Boolean(s.activeTakes.voiceover_audio));
+  const hasFinalCut = Boolean(campaign.activeMasterTakeId);
+
+  return {
+    1: hasBrief,
+    2: hasStoryboard,
+    3: hasAudio,
+    4: hasFinalCut,
+  };
+}
+
+export interface CalmBriefViewState {
+  title: string;
+  targetAudience: string;
+  creativeBrief: string;
+  musicalMoodPrompt: string;
+  activeTemplateId?: string;
+  starterTemplates: StarterCampaignTemplate[];
+  showBrandGuardrails: false;
+  showCustomBrandKitForm: false;
+}
+
+export function buildCalmBriefViewState(
+  campaign: CampaignDetail,
+  starterTemplates: StarterCampaignTemplate[]
+): CalmBriefViewState {
+  return {
+    title: campaign.title,
+    targetAudience: campaign.targetAudience,
+    creativeBrief: campaign.creativeBrief,
+    musicalMoodPrompt: campaign.musicalMoodPrompt,
+    activeTemplateId: campaign.templateId,
+    starterTemplates,
+    showBrandGuardrails: false,
+    showCustomBrandKitForm: false,
+  };
+}
+
+export type StoryboardMediaPreviewMode = 'image' | 'video';
+
+export interface VisualSceneCardViewModel {
+  sceneId: string;
+  sceneNumber: number;
+  title: string;
+  targetDurationSeconds: number;
+  spokenNarrationPreview: string;
+  previewMode: StoryboardMediaPreviewMode;
+  activeMediaUrl?: string;
+  activeModality: 'keyframe_start' | 'motion_video';
+  hasKeyframe: boolean;
+  hasMotionVideo: boolean;
+  isStale: boolean;
+  staleSummary: string | null;
+  openTextareaCount: 0;
+}
+
+export function buildVisualSceneCards(
+  campaign: CampaignDetail,
+  previewMode: StoryboardMediaPreviewMode
+): VisualSceneCardViewModel[] {
+  const findTake = (takeId?: string): AssetTake | undefined =>
+    takeId ? campaign.takes.find((t) => t.id === takeId) : undefined;
+
+  return campaign.scenes.map((scene: Scene, idx: number) => {
+    const kfTake = findTake(scene.activeTakes.keyframe_start);
+    const vidTake = findTake(scene.activeTakes.motion_video);
+    const activeModality = previewMode === 'video' ? 'motion_video' : 'keyframe_start';
+    const activeTake = previewMode === 'video' ? vidTake : kfTake;
+
+    const staleLabels = [
+      scene.stale.keyframe_start ? 'Keyframe' : null,
+      scene.stale.motion_video ? 'Motion' : null,
+      scene.stale.voiceover_audio ? 'Voiceover' : null,
+    ].filter(Boolean);
+
+    return {
+      sceneId: scene.id,
+      sceneNumber: idx + 1,
+      title: scene.title,
+      targetDurationSeconds: scene.targetDurationSeconds,
+      spokenNarrationPreview: scene.voiceoverScript,
+      previewMode,
+      activeMediaUrl: activeTake?.mediaUrl,
+      activeModality,
+      hasKeyframe: Boolean(kfTake),
+      hasMotionVideo: Boolean(vidTake),
+      isStale: staleLabels.length > 0,
+      staleSummary: staleLabels.length > 0 ? `Out of Sync: ${staleLabels.join(', ')}` : null,
+      openTextareaCount: 0,
+    };
+  });
+}
+
+export interface SceneInspectorModalViewModel {
+  sceneId: string;
+  sceneNumber: number;
+  title: string;
+  visualPrompt: string;
+  cameraMotionDirective: string;
+  voiceoverScript: string;
+  activeKeyframeTake?: AssetTake;
+  activeMotionTake?: AssetTake;
+  keyframeTakes: AssetTake[];
+  motionTakes: AssetTake[];
+  canExtendMotion: boolean;
+}
+
+export function buildSceneInspectorModalState(
+  campaign: CampaignDetail,
+  sceneId: string | null
+): SceneInspectorModalViewModel | null {
+  if (!sceneId) return null;
+  const idx = campaign.scenes.findIndex((s) => s.id === sceneId);
+  if (idx === -1) return null;
+  const scene = campaign.scenes[idx];
+
+  const getTakes = (modality: Modality) =>
+    campaign.takes.filter((t) => t.sceneId === scene.id && t.modality === modality);
+
+  const activeKeyframeTake = campaign.takes.find(
+    (t) => t.id === scene.activeTakes.keyframe_start
+  );
+  const activeMotionTake = campaign.takes.find(
+    (t) => t.id === scene.activeTakes.motion_video
+  );
+
+  return {
+    sceneId: scene.id,
+    sceneNumber: idx + 1,
+    title: scene.title,
+    visualPrompt: scene.visualPrompt,
+    cameraMotionDirective: scene.cameraMotionDirective,
+    voiceoverScript: scene.voiceoverScript,
+    activeKeyframeTake,
+    activeMotionTake,
+    keyframeTakes: getTakes('keyframe_start'),
+    motionTakes: getTakes('motion_video'),
+    canExtendMotion: Boolean(activeMotionTake),
+  };
+}
+
+export interface FinalCutTheaterViewModel {
+  masterVideoUrl?: string;
+  masterStale: boolean;
+  totalDurationSeconds: number;
+  sceneTimings: Array<{
+    sceneId: string;
+    sceneOrder: number;
+    sceneTitle: string;
+    durationLabel: string;
+  }>;
+  showBrandEvaluationScorecard: false;
+  showRawFfmpegFiltergraph: false;
+}
+
+export function buildFinalCutTheaterViewState(
+  campaign: CampaignDetail
+): FinalCutTheaterViewModel {
+  const masterTake = campaign.takes.find((t) => t.id === campaign.activeMasterTakeId);
+  const plan = campaign.latestTimelinePlan;
+
+  const sceneTimings = plan
+    ? plan.segments.map((seg) => ({
+        sceneId: seg.sceneId,
+        sceneOrder: seg.sceneOrder,
+        sceneTitle: seg.sceneTitle,
+        durationLabel: `${seg.startTimeSeconds}s → ${seg.endTimeSeconds}s`,
+      }))
+    : campaign.scenes.map((s, idx) => ({
+        sceneId: s.id,
+        sceneOrder: idx + 1,
+        sceneTitle: s.title,
+        durationLabel: `${s.targetDurationSeconds}s`,
+      }));
+
+  const totalDurationSeconds = plan
+    ? plan.totalDurationSeconds
+    : campaign.scenes.reduce((acc, s) => acc + s.targetDurationSeconds, 0);
+
+  return {
+    masterVideoUrl: masterTake?.mediaUrl,
+    masterStale: campaign.masterStale,
+    totalDurationSeconds,
+    sceneTimings,
+    showBrandEvaluationScorecard: false,
+    showRawFfmpegFiltergraph: false,
+  };
+}

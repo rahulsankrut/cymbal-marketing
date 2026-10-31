@@ -32,50 +32,12 @@ import type {
   StudioSSEEvent,
   StudioStageNumber,
 } from '../shared/types.js';
-
-const STAGES: Array<{
-  number: StudioStageNumber;
-  label: string;
-  subtitle: string;
-  modelBadge: string;
-}> = [
-  {
-    number: 1,
-    label: '1. Brief & Brand Kit',
-    subtitle: 'Campaign Setup & Guardrails',
-    modelBadge: 'Cymbal Brand Vault',
-  },
-  {
-    number: 2,
-    label: '2. AI Storyboard',
-    subtitle: 'Non-Linear Scene Canvas',
-    modelBadge: 'gemini-3.8-flash',
-  },
-  {
-    number: 3,
-    label: '3. Keyframes & Anchors',
-    subtitle: 'Multi-Image Reference Fusion',
-    modelBadge: 'gemini-nano-banana-2.1',
-  },
-  {
-    number: 4,
-    label: '4. Motion Synthesis',
-    subtitle: 'Keyframe-Locked Video & Edits',
-    modelBadge: 'gemini-omni-1.1-flash',
-  },
-  {
-    number: 5,
-    label: '5. Voiceover & Score',
-    subtitle: 'Voice Design + Visual Music',
-    modelBadge: '3.8-flash-tts + lyria-3.5',
-  },
-  {
-    number: 6,
-    label: '6. Brand Eval & Final Cut',
-    subtitle: 'Auto-Fix & FFmpeg -12dB Mix',
-    modelBadge: '3.8-flash + FFmpeg',
-  },
-];
+import {
+  SIMPLIFIED_STEPS,
+  computeSimplifiedStepReadiness,
+  buildCalmBriefViewState,
+  type SimplifiedStepNumber,
+} from './viewModel/studioViewModel.js';
 
 export function App() {
   const [brandKits, setBrandKits] = useState<BrandKit[]>([]);
@@ -696,38 +658,38 @@ export function App() {
           </div>
         </div>
 
-        {/* 6-Stage Pipeline Stepper Navigation */}
-        <div className="max-w-[1600px] mx-auto px-6 pb-3 grid grid-cols-2 md:grid-cols-6 gap-2">
-          {STAGES.map((st) => {
-            const isActive = activeStage === st.number;
-            const isReached = (activeCampaign?.currentStage || 1) >= st.number;
-            return (
-              <button
-                key={st.number}
-                type="button"
-                data-testid={`stage-tab-${st.number}`}
-                onClick={() => setActiveStage(st.number)}
-                className={`text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-sky-500/15 border-sky-400 text-white shadow-lg shadow-sky-950/50'
-                    : isReached
-                      ? 'bg-slate-900/70 border-slate-800 text-slate-200 hover:border-slate-700'
-                      : 'bg-slate-950/60 border-slate-900 text-slate-400 hover:border-slate-800'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-1 mb-0.5">
-                  <span className="text-xs font-bold tracking-tight">{st.label}</span>
-                  {isReached && (
+        {/* Compact 4-Step Storycraft Pill Navigation */}
+        <div className="max-w-[1600px] mx-auto px-6 pb-3 flex items-center justify-center">
+          <nav
+            aria-label="Studio 4-Step Navigation"
+            className="inline-flex flex-wrap items-center gap-1.5 bg-slate-900/90 border border-slate-800 rounded-full p-1.5 shadow-inner"
+          >
+            {SIMPLIFIED_STEPS.map((st) => {
+              const stepReadiness = computeSimplifiedStepReadiness(activeCampaign);
+              const isActive = activeStage === st.number;
+              const isCompleted = stepReadiness[st.number];
+              return (
+                <button
+                  key={st.number}
+                  type="button"
+                  data-testid={`stage-tab-${st.number}`}
+                  onClick={() => setActiveStage(st.number as StudioStageNumber)}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20'
+                      : isCompleted
+                        ? 'text-slate-100 hover:bg-slate-800/80'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`}
+                >
+                  {isCompleted && !isActive && (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                   )}
-                </div>
-                <div className="text-[11px] text-slate-400 truncate">{st.subtitle}</div>
-                <div className="mt-1.5 inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-950/90 text-sky-300 border border-slate-800">
-                  {st.modelBadge}
-                </div>
-              </button>
-            );
-          })}
+                  <span>{st.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
@@ -746,28 +708,28 @@ export function App() {
 
       {/* Main Studio Stage Workspace */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-6">
-        {/* STAGE 1: Creative Brief & Brand Kit */}
-        {activeStage === 1 && activeCampaign && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left 7 Cols: Starter Templates & Active Creative Brief */}
-            <div className="lg:col-span-7 space-y-6">
+        {/* STEP 1: Calm Creative Brief (Brand Guardrails & Custom Kit Clutter Removed) */}
+        {activeStage === 1 && activeCampaign && (() => {
+          const briefView = buildCalmBriefViewState(activeCampaign, starterTemplates);
+          return (
+            <div className="max-w-4xl mx-auto space-y-6">
               <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-sm font-bold uppercase tracking-wider text-sky-400">
-                      One-Click Cymbal Aerospace Campaign Presets
+                      1-Click Campaign Presets
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Pre-seeded aerospace campaign briefs with linked subject reference anchors.
+                      Pick a pre-seeded Cymbal Aerospace brief or write your own below.
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {starterTemplates.map((tpl) => (
+                  {briefView.starterTemplates.map((tpl) => (
                     <div
                       key={tpl.id}
                       className={`p-4 rounded-xl border flex flex-col justify-between transition-all ${
-                        activeCampaign.templateId === tpl.id
+                        briefView.activeTemplateId === tpl.id
                           ? 'bg-sky-950/30 border-sky-500/60'
                           : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                       }`}
@@ -788,30 +750,34 @@ export function App() {
                       >
                         {busyAction === `template-${tpl.id}`
                           ? 'Initializing...'
-                          : 'Launch Preset'}
+                          : 'Use Preset'}
                       </button>
                     </div>
                   ))}
                 </div>
               </section>
 
-              {/* Active Creative Brief Editor */}
-              <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-sky-400">
-                    Active Campaign Creative Brief
-                  </h2>
+              <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-bold text-white">
+                      Campaign Creative Brief
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Define your story pitch and audience, then generate your visual storyboard.
+                    </p>
+                  </div>
                   <button
                     type="button"
                     data-testid="stage1-generate-storyboard-btn"
                     disabled={busyAction === 'generate-storyboard'}
                     onClick={() => void handleGenerateStoryboard()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/20 transition cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-lg shadow-sky-500/20 transition cursor-pointer"
                   >
                     <Sparkles className="w-4 h-4" />
                     {busyAction === 'generate-storyboard'
-                      ? 'Generating Storyboard (gemini-3.8-flash)...'
-                      : 'Generate AI Storyboard (Stage 2) →'}
+                      ? 'Generating Storyboard...'
+                      : 'Generate Storyboard →'}
                   </button>
                 </div>
 
@@ -853,10 +819,10 @@ export function App() {
 
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
-                    Executive Creative Brief & Narrative Arc
+                    Creative Pitch & Narrative Arc
                   </label>
                   <textarea
-                    rows={4}
+                    rows={3}
                     value={activeCampaign.creativeBrief}
                     onChange={(e) =>
                       setActiveCampaign({
@@ -875,7 +841,7 @@ export function App() {
 
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">
-                    Musical Mood & Lyria 3.5 Scoring Directive
+                    Soundtrack Mood
                   </label>
                   <input
                     type="text"
@@ -896,130 +862,8 @@ export function App() {
                 </div>
               </section>
             </div>
-
-            {/* Right 5 Cols: Cymbal Aerospace Brand Kit & Guardrail Inspector */}
-            <div className="lg:col-span-5 space-y-6">
-              <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-sky-400">
-                      Active Brand Kit & Guardrails
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      Enforced during Storyboard, Keyframe Fusion, and Stage 6 Multimodal Eval
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewBrandKitForm(!showNewBrandKitForm)}
-                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 cursor-pointer"
-                  >
-                    + Custom Brand Kit
-                  </button>
-                </div>
-
-                <select
-                  aria-label="Select Brand Kit"
-                  value={activeBrandKit?.id || ''}
-                  onChange={(e) =>
-                    void handleUpdateCampaignField({ brandKitId: e.target.value })
-                  }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white"
-                >
-                  {brandKits.map((bk) => (
-                    <option key={bk.id} value={bk.id}>
-                      {bk.name} — "{bk.tagline}"
-                    </option>
-                  ))}
-                </select>
-
-                {showNewBrandKitForm && (
-                  <form
-                    onSubmit={(e) => void handleCreateCustomBrandKit(e)}
-                    className="p-3.5 rounded-xl bg-slate-950 border border-sky-500/40 space-y-3"
-                  >
-                    <div className="text-xs font-semibold text-sky-300">
-                      Create Division Brand Kit
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Brand Kit Name (e.g. Cymbal Defense & Orbital)"
-                      value={newBrandKitName}
-                      onChange={(e) => setNewBrandKitName(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Division Tagline"
-                      value={newBrandKitTagline}
-                      onChange={(e) => setNewBrandKitTagline(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 rounded bg-sky-500 text-slate-950 font-bold text-xs cursor-pointer"
-                    >
-                      Save Brand Kit
-                    </button>
-                  </form>
-                )}
-
-                {activeBrandKit && (
-                  <div className="space-y-4">
-                    {/* Color Swatches */}
-                    <div>
-                      <div className="text-xs font-semibold text-slate-300 mb-2">
-                        Approved Livery & Telemetry Color Tokens
-                      </div>
-                      <div className="grid grid-cols-5 gap-2">
-                        {activeBrandKit.colorPalette.map((color) => (
-                          <div
-                            key={color.name}
-                            className="p-2 rounded-lg bg-slate-950 border border-slate-800/80"
-                          >
-                            <div
-                              className="w-full h-6 rounded mb-1.5 border border-white/10"
-                              style={{ backgroundColor: color.hex }}
-                            />
-                            <div className="text-[10px] font-semibold text-slate-200 truncate">
-                              {color.name}
-                            </div>
-                            <div className="text-[10px] font-mono text-slate-400">
-                              {color.hex}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Visual Identity & Aerospace Realism Rules */}
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-slate-300">
-                        Visual Identity & Cinematography Rules
-                      </div>
-                      <ul className="space-y-1 text-xs text-slate-400 list-disc list-inside">
-                        {activeBrandKit.visualIdentityRules.map((rule, idx) => (
-                          <li key={idx}>{rule}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-amber-300">
-                        Regulatory & Aviation Compliance Guardrails
-                      </div>
-                      <ul className="space-y-1 text-xs text-slate-400 list-disc list-inside">
-                        {activeBrandKit.regulatoryClaimGuardrails.map((rule, idx) => (
-                          <li key={idx}>{rule}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* STAGE 2: AI Storyboard & Non-Linear Scene Canvas */}
         {activeStage === 2 && activeCampaign && (
