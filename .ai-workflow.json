@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-10-31T01:45:32.394Z",
+  "updatedAt": "2026-10-31T01:59:26.427Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -444,7 +444,7 @@
             {
               "id": "p5-commit",
               "label": "Verify structured commit & move completed ticket to issues/done/",
-              "completed": false,
+              "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
@@ -706,7 +706,7 @@
         {
           "id": "p5-commit",
           "label": "Verify structured commit & move completed ticket to issues/done/",
-          "completed": false,
+          "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
         },

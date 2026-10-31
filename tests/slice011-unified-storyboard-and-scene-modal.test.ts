@@ -13,7 +13,10 @@ function createStoryboardCampaign(): CampaignDetail {
     title: 'CX-900 Supersonic Avionics Launch',
     brandKitId: 'bk-cymbal-global',
     targetAudience: 'Global Airline Fleet VPs',
+    spotDurationSeconds: 18,
+    aspectRatio: '16:9',
     creativeBrief: 'Launch film',
+    keyProductClaims: [],
     musicalMoodPrompt: 'Synth pulse',
     currentStage: 3,
     masterStale: false,
@@ -28,7 +31,8 @@ function createStoryboardCampaign(): CampaignDetail {
     scenes: [
       {
         id: 'scene-1',
-        order: 1,
+        campaignId: 'camp-2',
+        orderIndex: 1,
         title: 'Dawn Stratosphere Climb',
         narrativeBeat: 'Hook',
         visualPrompt: 'Obsidian jet climbing through clouds.',
@@ -36,6 +40,7 @@ function createStoryboardCampaign(): CampaignDetail {
         voiceoverScript: 'At sixty thousand feet, clarity is everything.',
         vocalStyleDirective: 'authoritative',
         targetDurationSeconds: 6,
+        anchorIds: [],
         activeTakes: {
           keyframe_start: 'take-kf-1',
           motion_video: 'take-vid-1',
@@ -46,6 +51,7 @@ function createStoryboardCampaign(): CampaignDetail {
           motion_video: true,
           voiceover_audio: false,
         },
+        updatedAt: '2026-10-30T00:00:00Z',
       },
     ],
     takes: [
