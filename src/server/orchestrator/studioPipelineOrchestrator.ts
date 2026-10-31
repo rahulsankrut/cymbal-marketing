@@ -653,6 +653,8 @@ export class StudioPipelineOrchestrator {
       gender: 'female' | 'male' | 'neutral';
       languageCode: string;
       personaPrompt: string;
+      speakingRate?: number;
+      vocalStylePreset?: string;
     }
   ): Promise<{ voicePersona: VoicePersonaConfig; campaign: CampaignDetail }> {
     this.emitEvent({
@@ -666,7 +668,16 @@ export class StudioPipelineOrchestrator {
     });
 
     try {
-      const voicePersona = await this.gateway.designVoicePersona(campaignId, input);
+      const currentCampaign = await this.vault.getCampaign(campaignId);
+      const designed = await this.gateway.designVoicePersona(campaignId, input);
+      const voicePersona: VoicePersonaConfig = {
+        ...designed,
+        speakingRate:
+          typeof input.speakingRate === 'number'
+            ? input.speakingRate
+            : currentCampaign.voicePersona.speakingRate,
+        ...(input.vocalStylePreset ? { vocalStylePreset: input.vocalStylePreset } : {}),
+      };
       const campaign = await this.vault.updateCampaignMeta(campaignId, { voicePersona });
 
       this.emitEvent({

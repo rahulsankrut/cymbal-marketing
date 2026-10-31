@@ -144,17 +144,6 @@ export function App() {
     void loadBootstrap();
   }, []);
 
-  // Keep browser voiceover <audio> elements playing at the selected speaking speed
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const players = document.querySelectorAll<HTMLAudioElement>(
-      'audio[data-voiceover-player="true"]'
-    );
-    players.forEach((audioEl) => {
-      audioEl.playbackRate = voiceSpeed;
-    });
-  }, [voiceSpeed, activeStage, activeCampaign]);
-
   // Subscribe to SSE telemetry stream for active campaign
   useEffect(() => {
     if (!activeCampaign?.id) return;
@@ -449,6 +438,13 @@ export function App() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             modality,
+            ...(modality === 'voiceover_audio'
+              ? {
+                  speakingRate: voiceSpeed,
+                  voiceId: voicePresetId,
+                  vocalStylePreset: voiceStylePreset,
+                }
+              : {}),
             ...options,
           }),
         }
@@ -459,6 +455,7 @@ export function App() {
       }
       const data = await res.json();
       setActiveCampaign(data.campaign);
+      syncCampaignSummaryFromDetail(data.campaign);
     } catch (err) {
       setErrorBanner((err as Error).message);
     } finally {
@@ -476,7 +473,16 @@ export function App() {
       const res = await fetch(`/api/campaigns/${activeCampaign.id}/batch-generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modality }),
+        body: JSON.stringify({
+          modality,
+          ...(modality === 'voiceover_audio'
+            ? {
+                speakingRate: voiceSpeed,
+                voiceId: voicePresetId,
+                vocalStylePreset: voiceStylePreset,
+              }
+            : {}),
+        }),
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
@@ -484,6 +490,7 @@ export function App() {
       }
       const data = await res.json();
       setActiveCampaign(data.campaign);
+      syncCampaignSummaryFromDetail(data.campaign);
     } catch (err) {
       setErrorBanner((err as Error).message);
     } finally {
@@ -521,6 +528,8 @@ export function App() {
           gender: voiceGender,
           languageCode: 'en-US',
           personaPrompt: voicePersonaPrompt,
+          speakingRate: voiceSpeed,
+          vocalStylePreset: voiceStylePreset,
         }),
       });
       if (!res.ok) {
@@ -575,12 +584,25 @@ export function App() {
       }
       const data = await res.json();
       setActiveCampaign(data.campaign);
+      syncCampaignSummaryFromDetail(data.campaign);
     } catch (err) {
       setErrorBanner((err as Error).message);
     } finally {
       setBusyAction(null);
     }
   }
+
+  // Automatically re-assemble Final Cut when entering Step 4 if voiceovers, music, or motion clips changed
+  useEffect(() => {
+    if (
+      activeStage === 4 &&
+      activeCampaign?.masterStale &&
+      activeCampaign?.activeMasterTakeId &&
+      !busyAction
+    ) {
+      void handleAssembleMasterCut();
+    }
+  }, [activeStage, activeCampaign?.masterStale, activeCampaign?.activeMasterTakeId]);
 
   const totalStaleCount = computeTotalStaleCount(activeCampaign);
 
@@ -1591,9 +1613,6 @@ export function App() {
                         <audio
                           data-voiceover-player="true"
                           src={audioView.voiceSampleAudioUrl}
-                          onPlay={(e) => {
-                            e.currentTarget.playbackRate = voiceSpeed;
-                          }}
                           controls
                           className="w-full h-8"
                         />
@@ -1625,11 +1644,9 @@ export function App() {
                         <p className="text-xs text-slate-300 italic">"{scene.voiceoverScript}"</p>
                         {scene.activeVoiceoverUrl && (
                           <audio
+                            key={scene.activeVoiceoverUrl}
                             data-voiceover-player="true"
                             src={scene.activeVoiceoverUrl}
-                            onPlay={(e) => {
-                              e.currentTarget.playbackRate = voiceSpeed;
-                            }}
                             controls
                             className="w-full max-w-md h-8 mt-2"
                           />

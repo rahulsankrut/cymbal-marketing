@@ -744,8 +744,8 @@ export class GeminiStudioGateway {
     // Live Vertex AI path
     if (this.isVertexAi && this.vertexGlobal) {
       const selectedVoice = selectGeminiTtsVoiceName(request.voiceId);
-      const targetRate = Math.min(1.6, Math.max(0.8, request.speakingRate || 1.25));
-      const styledPrompt = `Speak at a brisk, crisp ${targetRate}x commercial pace in ${request.vocalStyleDirective || 'upbeat, clear commercial narration'}: ${request.text}`;
+      const targetRate = Math.min(1.6, Math.max(0.8, Number(request.speakingRate) || 1.0));
+      const styledPrompt = `Speak clearly in this vocal style (${request.vocalStyleDirective || 'natural, engaging commercial narration'}): ${request.text}`;
 
       const response = await this.vertexGlobal.models.generateContent({
         model: 'gemini-2.5-flash-tts',

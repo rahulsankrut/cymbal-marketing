@@ -213,6 +213,25 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   // Stage 3, 4, 5: Per-Scene Asset Generation, Conversational Editing & Video Extension
   app.post('/api/campaigns/:id/scenes/:sceneId/generate', async (req, res) => {
     try {
+      if (
+        typeof req.body?.speakingRate === 'number' ||
+        typeof req.body?.voiceId === 'string' ||
+        typeof req.body?.vocalStylePreset === 'string'
+      ) {
+        const current = await vault.getCampaign(req.params.id);
+        await vault.updateCampaignMeta(req.params.id, {
+          voicePersona: {
+            ...current.voicePersona,
+            ...(typeof req.body.speakingRate === 'number'
+              ? { speakingRate: req.body.speakingRate }
+              : {}),
+            ...(typeof req.body.voiceId === 'string' ? { voiceId: req.body.voiceId } : {}),
+            ...(typeof req.body.vocalStylePreset === 'string'
+              ? { vocalStylePreset: req.body.vocalStylePreset }
+              : {}),
+          },
+        });
+      }
       const take = await orchestrator.runSceneStageJob({
         campaignId: req.params.id,
         sceneId: req.params.sceneId,
@@ -232,6 +251,25 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   // Parallel Batch Generation across all scenes
   app.post('/api/campaigns/:id/batch-generate', async (req, res) => {
     try {
+      if (
+        typeof req.body?.speakingRate === 'number' ||
+        typeof req.body?.voiceId === 'string' ||
+        typeof req.body?.vocalStylePreset === 'string'
+      ) {
+        const current = await vault.getCampaign(req.params.id);
+        await vault.updateCampaignMeta(req.params.id, {
+          voicePersona: {
+            ...current.voicePersona,
+            ...(typeof req.body.speakingRate === 'number'
+              ? { speakingRate: req.body.speakingRate }
+              : {}),
+            ...(typeof req.body.voiceId === 'string' ? { voiceId: req.body.voiceId } : {}),
+            ...(typeof req.body.vocalStylePreset === 'string'
+              ? { vocalStylePreset: req.body.vocalStylePreset }
+              : {}),
+          },
+        });
+      }
       const takes = await orchestrator.runBatchStageJob({
         campaignId: req.params.id,
         modality: req.body.modality,

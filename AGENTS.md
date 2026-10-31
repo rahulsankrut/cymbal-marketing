@@ -42,7 +42,7 @@
 
 ### 4. [`MasterTimelineAssembler`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/assembler/masterTimelineAssembler.ts)
 - `buildTimelinePlan(campaignId)`: Computes per-scene timeline segments, silence padding vs. voiceover overflow warnings, and the `-12dB` (`volume=0.251`) FFmpeg music ducking filtergraph during active narration windows.
-- `assembleMasterCut(campaignId)`: Writes the final master `.mp4` directly to disk (`libx264`, `yuv420p`, `aac`, `-movflags +faststart`, `maxBuffer: 128 MB`), concatenating real scene motion `.mp4` clips (or keyframe `.png` fallback), real per-scene `.wav` voiceovers (with `atempo` speedup when voiceover exceeds target duration), and ducked `.wav` soundtrack.
+- `assembleMasterCut(campaignId)`: Writes the final master `.mp4` directly to disk (`libx264`, `yuv420p`, `aac`, `-movflags +faststart`, `maxBuffer: 128 MB`), concatenating real scene motion `.mp4` clips (with `tpad=stop_mode=clone` when voiceover exceeds video duration), real per-scene `.wav` voiceovers at their exact synthesized `speakingRate` (no duplicate `atempo`), and `-12dB` ducked `.wav` soundtrack.
 
 ### 5. [`StudioWorkspaceUI`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/App.tsx), [`SceneInspectorModal`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/components/SceneInspectorModal.tsx) & [`studioViewModel`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/viewModel/studioViewModel.ts)
 - Pure, zero-DOM ViewModel selectors and option constants in [`studioViewModel.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/client/viewModel/studioViewModel.ts):

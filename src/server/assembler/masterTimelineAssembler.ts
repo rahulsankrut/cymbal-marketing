@@ -224,26 +224,12 @@ export class MasterTimelineAssembler {
         const filterChains: string[] = [];
         const vLabels: string[] = [];
         const voLabels: string[] = [];
-        const baseRate = Math.min(1.6, Math.max(0.85, campaign.voicePersona.speakingRate || 1.25));
 
         for (let i = 0; i < timelinePlan.segments.length; i++) {
           const seg = timelinePlan.segments[i];
-          const voTempo = Math.min(
-            1.85,
-            Math.max(
-              baseRate,
-              seg.voiceoverDurationSeconds > seg.videoDurationSeconds
-                ? Number((seg.voiceoverDurationSeconds / seg.videoDurationSeconds).toFixed(2))
-                : baseRate
-            )
-          );
-          const adjustedVoDur =
-            seg.voiceoverDurationSeconds > 0
-              ? Number((seg.voiceoverDurationSeconds / voTempo).toFixed(2))
-              : 0;
           const segDur = Math.max(
             1,
-            Number(Math.max(seg.videoDurationSeconds, adjustedVoDur).toFixed(2))
+            Number(Math.max(seg.videoDurationSeconds, seg.voiceoverDurationSeconds).toFixed(2))
           );
           const extraVideoPad = Math.max(
             0,
@@ -257,7 +243,7 @@ export class MasterTimelineAssembler {
 
           const voIn = voInputIndices[i];
           filterChains.push(
-            `[${voIn}:a]aresample=24000,aformat=sample_fmts=fltp:channel_layouts=mono,atempo=${voTempo},apad=whole_dur=${segDur},atrim=0:${segDur},asetpts=PTS-STARTPTS[vo${i}]`
+            `[${voIn}:a]aresample=24000,aformat=sample_fmts=fltp:channel_layouts=mono,apad=whole_dur=${segDur},atrim=0:${segDur},asetpts=PTS-STARTPTS[vo${i}]`
           );
           voLabels.push(`[vo${i}]`);
         }
