@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { join, basename } from 'node:path';
+import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import ffmpegPath from 'ffmpeg-static';
@@ -159,7 +160,9 @@ export class MasterTimelineAssembler {
         )
         .join('+') || '0';
 
-    // 1. First attempt: Stitch actual scene video takes + voiceover takes + music score from disk
+    const tempOutPath = join(tmpdir(), `cymbal-master-${randomUUID().slice(0, 8)}.mp4`);
+
+    // 1. First attempt: Stitch actual scene video takes + real scene voiceover takes + music score from disk
     try {
       const sceneVideoPaths = timelinePlan.segments
         .map((seg) =>
@@ -173,12 +176,34 @@ export class MasterTimelineAssembler {
         sceneVideoPaths.length > 0 &&
         sceneVideoPaths.length === timelinePlan.segments.length
       ) {
-        const ffmpegArgs: string[] = ['-v', 'error'];
+        const ffmpegArgs: string[] = ['-y', '-v', 'error'];
         for (const vp of sceneVideoPaths) {
           ffmpegArgs.push('-i', vp);
         }
 
-        const musicIdx = sceneVideoPaths.length;
+        // Add per-scene voiceover inputs (real WAV if available, or silent lavfi fallback for that scene)
+        const voInputIndices: number[] = [];
+        let nextInputIdx = sceneVideoPaths.length;
+
+        for (const seg of timelinePlan.segments) {
+          const voPath = seg.voiceoverUrl
+            ? join(this.vault.getMediaDir(), basename(seg.voiceoverUrl.replace(/^\/media\//, '')))
+            : null;
+          if (voPath && existsSync(voPath) && readFileSync(voPath).length > 256) {
+            ffmpegArgs.push('-i', voPath);
+          } else {
+            ffmpegArgs.push(
+              '-f',
+              'lavfi',
+              '-i',
+              `anullsrc=r=24000:cl=mono:d=${Math.max(1, seg.effectiveSceneDurationSeconds)}`
+            );
+          }
+          voInputIndices.push(nextInputIdx++);
+        }
+
+        // Add campaign music score input
+        const musicIdx = nextInputIdx++;
         const musicPath = timelinePlan.musicScoreUrl
           ? join(
               this.vault.getMediaDir(),
@@ -196,53 +221,103 @@ export class MasterTimelineAssembler {
           );
         }
 
-        const voIdx = musicIdx + 1;
-        ffmpegArgs.push(
-          '-f',
-          'lavfi',
-          '-i',
-          `sine=frequency=220:sample_rate=24000:duration=${totalDuration}`
-        );
+        const filterChains: string[] = [];
+        const vLabels: string[] = [];
+        const voLabels: string[] = [];
+        const baseRate = Math.min(1.6, Math.max(0.85, campaign.voicePersona.speakingRate || 1.25));
 
-        const videoInputs = sceneVideoPaths.map((_, idx) => `[${idx}:v]`).join('');
-        const filterComplex = [
-          `${videoInputs}concat=n=${sceneVideoPaths.length}:v=1:a=0[v_concat]`,
-          `[${musicIdx}:a]volume=enable='${duckCondition}':volume=0.251[music_ducked]`,
-          `[${voIdx}:a][music_ducked]amix=inputs=2:duration=first[aout]`,
-        ].join(';');
+        for (let i = 0; i < timelinePlan.segments.length; i++) {
+          const seg = timelinePlan.segments[i];
+          const voTempo = Math.min(
+            1.85,
+            Math.max(
+              baseRate,
+              seg.voiceoverDurationSeconds > seg.videoDurationSeconds
+                ? Number((seg.voiceoverDurationSeconds / seg.videoDurationSeconds).toFixed(2))
+                : baseRate
+            )
+          );
+          const adjustedVoDur =
+            seg.voiceoverDurationSeconds > 0
+              ? Number((seg.voiceoverDurationSeconds / voTempo).toFixed(2))
+              : 0;
+          const segDur = Math.max(
+            1,
+            Number(Math.max(seg.videoDurationSeconds, adjustedVoDur).toFixed(2))
+          );
+          const extraVideoPad = Math.max(
+            0,
+            Number((segDur - seg.videoDurationSeconds + 0.5).toFixed(2))
+          );
+
+          filterChains.push(
+            `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=24,format=yuv420p,tpad=stop_mode=clone:stop_duration=${extraVideoPad},trim=duration=${segDur},setpts=PTS-STARTPTS[v${i}]`
+          );
+          vLabels.push(`[v${i}]`);
+
+          const voIn = voInputIndices[i];
+          filterChains.push(
+            `[${voIn}:a]aresample=24000,aformat=sample_fmts=fltp:channel_layouts=mono,atempo=${voTempo},apad=whole_dur=${segDur},atrim=0:${segDur},asetpts=PTS-STARTPTS[vo${i}]`
+          );
+          voLabels.push(`[vo${i}]`);
+        }
+
+        filterChains.push(
+          `${vLabels.join('')}concat=n=${timelinePlan.segments.length}:v=1:a=0[v_concat]`,
+          `${voLabels.join('')}concat=n=${timelinePlan.segments.length}:v=0:a=1[vo_concat]`,
+          `[${musicIdx}:a]aresample=24000,aformat=sample_fmts=fltp:channel_layouts=mono,volume=enable='${duckCondition}':volume=0.251,apad=whole_dur=${totalDuration},atrim=0:${totalDuration}[music_ducked]`,
+          `[vo_concat][music_ducked]amix=inputs=2:duration=first:dropout_transition=2:weights='1.4 0.7'[aout]`
+        );
 
         ffmpegArgs.push(
           '-filter_complex',
-          filterComplex,
+          filterChains.join(';'),
           '-map',
           '[v_concat]',
           '-map',
           '[aout]',
           '-c:v',
           'libx264',
+          '-preset',
+          'ultrafast',
           '-pix_fmt',
           'yuv420p',
           '-c:a',
           'aac',
+          '-b:a',
+          '128k',
           '-movflags',
-          'frag_keyframe+empty_moov+default_base_moof',
-          '-f',
-          'mp4',
-          'pipe:1'
+          '+faststart',
+          tempOutPath
         );
 
-        masterMp4Buffer = execFileSync(this.ffmpegBin, ffmpegArgs, { timeout: 12000 });
+        execFileSync(this.ffmpegBin, ffmpegArgs, {
+          timeout: 30000,
+          maxBuffer: 128 * 1024 * 1024,
+        });
+        if (existsSync(tempOutPath)) {
+          masterMp4Buffer = readFileSync(tempOutPath);
+        }
       }
     } catch {
       masterMp4Buffer = null;
+    } finally {
+      if (existsSync(tempOutPath)) {
+        try {
+          unlinkSync(tempOutPath);
+        } catch {
+          // ignore cleanup error
+        }
+      }
     }
 
     // 2. Fallback: Real FFmpeg lavfi assembly with -12dB audio ducking filtergraph (when scene takes use synthetic test stubs)
     if (!masterMp4Buffer) {
       try {
-        masterMp4Buffer = execFileSync(
+        execFileSync(
           this.ffmpegBin,
           [
+            '-y',
             '-v',
             'error',
             '-f',
@@ -265,24 +340,34 @@ export class MasterTimelineAssembler {
             '[aout]',
             '-c:v',
             'libx264',
+            '-preset',
+            'ultrafast',
             '-pix_fmt',
             'yuv420p',
             '-c:a',
             'aac',
             '-movflags',
-            'frag_keyframe+empty_moov+default_base_moof',
-            '-f',
-            'mp4',
-            'pipe:1',
+            '+faststart',
+            tempOutPath,
           ],
-          { timeout: 12000 }
+          { timeout: 20000, maxBuffer: 64 * 1024 * 1024 }
         );
-      } catch {
-        masterMp4Buffer = Buffer.from(
-          '00000018667479706d703432000000006d70343269736f6d',
-          'hex'
-        );
+        if (existsSync(tempOutPath)) {
+          masterMp4Buffer = readFileSync(tempOutPath);
+        }
+      } finally {
+        if (existsSync(tempOutPath)) {
+          try {
+            unlinkSync(tempOutPath);
+          } catch {
+            // ignore cleanup error
+          }
+        }
       }
+    }
+
+    if (!masterMp4Buffer || masterMp4Buffer.length < 256) {
+      throw new Error('FFmpeg Master Cut assembly failed to produce a valid MP4 stream.');
     }
 
     const masterTake = await this.vault.appendTake({

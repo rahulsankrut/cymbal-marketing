@@ -34,9 +34,9 @@ describe('Slice 001 — Pre-Seeded Cymbal Aerospace Brand Kit, Starter Templates
     const titles = res.body.starterTemplates.map((t: { title: string }) => t.title);
     expect(titles).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('Supersonic Avionics'),
-        expect.stringContaining('Hydrogen Propulsion'),
-        expect.stringContaining('Orbital Telemetry'),
+        expect.stringContaining('Kids Level'),
+        expect.stringContaining('College Level'),
+        expect.stringContaining('Executive Level'),
       ])
     );
   });

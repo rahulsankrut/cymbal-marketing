@@ -27,6 +27,14 @@ import type {
 } from '../shared/types.js';
 import {
   SIMPLIFIED_STEPS,
+  DEFAULT_STORYBOARD_PREVIEW_MODE,
+  VOICE_PRESET_OPTIONS,
+  VOICE_SPEED_OPTIONS,
+  VOICE_STYLE_OPTIONS,
+  MUSIC_GENRE_OPTIONS,
+  MUSIC_TEMPO_OPTIONS,
+  MUSIC_INSTRUMENT_OPTIONS,
+  composeSoundtrackPromptFromSelections,
   mapBackendStageToStep,
   computeSimplifiedStepReadiness,
   computeTotalStaleCount,
@@ -50,19 +58,33 @@ export function App() {
   const [events, setEvents] = useState<StudioSSEEvent[]>([]);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
-  // Unified Step 2 Storyboard & Visuals UI state
+  // Unified Step 2 Storyboard & Visuals UI state (Motion Clips primary by default)
   const [storyboardPreviewMode, setStoryboardPreviewMode] =
-    useState<StoryboardMediaPreviewMode>('image');
+    useState<StoryboardMediaPreviewMode>(DEFAULT_STORYBOARD_PREVIEW_MODE);
   const [showReferenceAnchorsDrawer, setShowReferenceAnchorsDrawer] = useState(false);
   const [showAddSceneDrawer, setShowAddSceneDrawer] = useState(false);
   const [inspectedSceneId, setInspectedSceneId] = useState<string | null>(null);
 
-  // Step 3 Collapsible Voice Persona form state
+  // Step 3 Voice & Soundtrack dropdown + prompt controls state
   const [showVoicePersonaForm, setShowVoicePersonaForm] = useState(false);
-  const [voiceDisplayName, setVoiceDisplayName] = useState('Commander Elena Vance');
+  const [voicePresetId, setVoicePresetId] = useState<string>('Kore');
+  const [voiceSpeed, setVoiceSpeed] = useState<number>(1.25);
+  const [voiceStylePreset, setVoiceStylePreset] = useState<string>(
+    VOICE_STYLE_OPTIONS[0]
+  );
+  const [voiceDisplayName, setVoiceDisplayName] = useState(
+    'Kore — Warm & Crisp Commercial (Default)'
+  );
   const [voiceGender, setVoiceGender] = useState<'female' | 'male' | 'neutral'>('female');
   const [voicePersonaPrompt, setVoicePersonaPrompt] = useState(
-    'An authoritative, calm, and inspiring aerospace chief test pilot with crisp mid-Atlantic diction and warm cinematic gravitas.'
+    'A brisk, upbeat, and clear commercial narrator with crisp modern pacing and engaging warmth.'
+  );
+
+  // Step 3 Soundtrack dropdown controls
+  const [musicGenre, setMusicGenre] = useState<string>(MUSIC_GENRE_OPTIONS[0]);
+  const [musicTempo, setMusicTempo] = useState<string>(MUSIC_TEMPO_OPTIONS[0]);
+  const [musicInstruments, setMusicInstruments] = useState<string>(
+    MUSIC_INSTRUMENT_OPTIONS[0]
   );
 
   // New Scene form state
@@ -92,6 +114,11 @@ export function App() {
         if (detailRes.ok) {
           const detail: CampaignDetail = await detailRes.json();
           setActiveCampaign(detail);
+          setVoicePresetId(detail.voicePersona.voiceId || 'Kore');
+          setVoiceSpeed(detail.voicePersona.speakingRate || 1.25);
+          setVoiceStylePreset(
+            detail.voicePersona.vocalStylePreset || VOICE_STYLE_OPTIONS[0]
+          );
           setVoiceDisplayName(detail.voicePersona.displayName);
           setVoiceGender(detail.voicePersona.gender);
           setVoicePersonaPrompt(detail.voicePersona.personaPrompt);
@@ -105,6 +132,17 @@ export function App() {
   useEffect(() => {
     void loadBootstrap();
   }, []);
+
+  // Keep browser voiceover <audio> elements playing at the selected speaking speed
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const players = document.querySelectorAll<HTMLAudioElement>(
+      'audio[data-voiceover-player="true"]'
+    );
+    players.forEach((audioEl) => {
+      audioEl.playbackRate = voiceSpeed;
+    });
+  }, [voiceSpeed, activeStage, activeCampaign]);
 
   // Subscribe to SSE telemetry stream for active campaign
   useEffect(() => {
@@ -773,35 +811,35 @@ export function App() {
 
           return (
             <div className="space-y-6">
-              {/* Top Storyboard Action & Preview Mode Bar */}
+              {/* Top Storyboard Action & Preview Mode Bar (Motion Clips Primary, Keyframes Toggle) */}
               <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="inline-flex rounded-full bg-slate-950 border border-slate-800 p-1">
-                    <button
-                      type="button"
-                      data-testid="storyboard-preview-mode-image"
-                      onClick={() => setStoryboardPreviewMode('image')}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                        storyboardPreviewMode === 'image'
-                          ? 'bg-sky-500 text-slate-950'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <ImageIcon className="w-3.5 h-3.5" />
-                      Keyframes
-                    </button>
                     <button
                       type="button"
                       data-testid="storyboard-preview-mode-video"
                       onClick={() => setStoryboardPreviewMode('video')}
                       className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                         storyboardPreviewMode === 'video'
-                          ? 'bg-sky-500 text-slate-950'
+                          ? 'bg-sky-500 text-slate-950 shadow-sm'
                           : 'text-slate-400 hover:text-white'
                       }`}
                     >
                       <Film className="w-3.5 h-3.5" />
-                      Motion Clips
+                      Motion Clips (Primary)
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="storyboard-preview-mode-image"
+                      onClick={() => setStoryboardPreviewMode('image')}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        storyboardPreviewMode === 'image'
+                          ? 'bg-sky-500 text-slate-950 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Keyframes
                     </button>
                   </div>
 
@@ -1090,12 +1128,28 @@ export function App() {
                         {card.previewMode === 'video' ? (
                           card.activeMediaUrl ? (
                             <video
+                              key={card.activeMediaUrl}
                               src={card.activeMediaUrl}
+                              poster={card.posterImageUrl}
                               controls
                               loop
                               muted
+                              playsInline
                               className="w-full h-full object-cover"
                             />
+                          ) : card.posterImageUrl ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={card.posterImageUrl}
+                                alt={card.title}
+                                className="w-full h-full object-cover opacity-75"
+                              />
+                              <div className="absolute inset-x-0 bottom-2 flex justify-center">
+                                <span className="px-2.5 py-1 rounded-full bg-slate-950/85 border border-slate-700 text-[10px] text-sky-300 font-semibold">
+                                  Keyframe Ready · Click Generate Motion
+                                </span>
+                              </div>
+                            </div>
                           ) : (
                             <div className="text-center p-4 text-xs text-slate-500">
                               No motion clip generated yet
@@ -1190,39 +1244,183 @@ export function App() {
           const audioView = buildStreamlinedAudioViewState(activeCampaign);
           return (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left 7 Cols: Per-Scene Narration Studio + Collapsible Voice Persona */}
+              {/* Left 7 Cols: Per-Scene Narration Studio + Voice Controls Dropdowns + Prompt */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-base font-bold text-white flex items-center gap-2">
-                      <AudioLines className="w-4 h-4 text-sky-400" />
-                      Scene Voiceover Narration
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      Active Narrator: <strong>{audioView.activeNarratorName}</strong>
-                    </p>
+                <div className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-base font-bold text-white flex items-center gap-2">
+                        <AudioLines className="w-4 h-4 text-sky-400" />
+                        Scene Voiceover Narration
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Active Narrator: <strong>{audioView.activeNarratorName}</strong> · Speed:{' '}
+                        <strong className="text-sky-300">{voiceSpeed}x</strong>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid="toggle-voice-persona-btn"
+                        onClick={() => setShowVoicePersonaForm((v) => !v)}
+                        className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Mic className="w-3.5 h-3.5 text-sky-400" />
+                        Customize Voice Persona
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="batch-generate-voiceover-btn"
+                        disabled={busyAction === 'batch-voiceover_audio'}
+                        onClick={() => void handleBatchGenerate('voiceover_audio')}
+                        className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
+                      >
+                        {busyAction === 'batch-voiceover_audio'
+                          ? 'Synthesizing All Voiceovers...'
+                          : 'Synthesize All Voiceovers'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      data-testid="toggle-voice-persona-btn"
-                      onClick={() => setShowVoicePersonaForm((v) => !v)}
-                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Mic className="w-3.5 h-3.5 text-sky-400" />
-                      Customize Voice Persona
-                    </button>
-                    <button
-                      type="button"
-                      data-testid="batch-generate-voiceover-btn"
-                      disabled={busyAction === 'batch-voiceover_audio'}
-                      onClick={() => void handleBatchGenerate('voiceover_audio')}
-                      className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer"
-                    >
-                      {busyAction === 'batch-voiceover_audio'
-                        ? 'Synthesizing All Voiceovers...'
-                        : 'Synthesize All Voiceovers'}
-                    </button>
+
+                  {/* Quick Dropdown Controls + Prompt for Voice Choice & Faster Pacing */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Narrator Voice Preset
+                      </label>
+                      <select
+                        data-testid="voice-preset-select"
+                        value={voicePresetId}
+                        onChange={(e) => {
+                          const chosen = VOICE_PRESET_OPTIONS.find(
+                            (o) => o.voiceId === e.target.value
+                          );
+                          if (!chosen) return;
+                          setVoicePresetId(chosen.voiceId);
+                          setVoiceDisplayName(chosen.displayName);
+                          setVoiceGender(chosen.gender);
+                          setVoiceStylePreset(chosen.defaultStyle);
+                          setVoicePersonaPrompt(chosen.defaultPrompt);
+                          const nextPersona = {
+                            ...activeCampaign.voicePersona,
+                            voiceId: chosen.voiceId,
+                            displayName: chosen.displayName,
+                            gender: chosen.gender,
+                            personaPrompt: chosen.defaultPrompt,
+                            speakingRate: voiceSpeed,
+                            vocalStylePreset: chosen.defaultStyle,
+                          };
+                          setActiveCampaign({
+                            ...activeCampaign,
+                            voicePersona: nextPersona,
+                          });
+                          void handleUpdateCampaignField({ voicePersona: nextPersona });
+                        }}
+                        className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
+                      >
+                        {VOICE_PRESET_OPTIONS.map((opt) => (
+                          <option key={opt.voiceId} value={opt.voiceId}>
+                            {opt.displayName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Speaking Speed (Pace)
+                      </label>
+                      <select
+                        data-testid="voice-speed-select"
+                        value={String(voiceSpeed)}
+                        onChange={(e) => {
+                          const nextSpeed = Number(e.target.value) || 1.25;
+                          setVoiceSpeed(nextSpeed);
+                          const nextPersona = {
+                            ...activeCampaign.voicePersona,
+                            speakingRate: nextSpeed,
+                          };
+                          setActiveCampaign({
+                            ...activeCampaign,
+                            voicePersona: nextPersona,
+                          });
+                          void handleUpdateCampaignField({ voicePersona: nextPersona });
+                        }}
+                        className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-sky-300 font-semibold focus:border-sky-500 focus:outline-none"
+                      >
+                        {VOICE_SPEED_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={String(opt.value)}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Vocal Delivery Style
+                      </label>
+                      <select
+                        data-testid="voice-style-select"
+                        value={voiceStylePreset}
+                        onChange={(e) => {
+                          const chosenStyle = e.target.value;
+                          setVoiceStylePreset(chosenStyle);
+                          const updatedPrompt = `${chosenStyle}. ${voicePersonaPrompt}`;
+                          setVoicePersonaPrompt(updatedPrompt);
+                          const nextPersona = {
+                            ...activeCampaign.voicePersona,
+                            vocalStylePreset: chosenStyle,
+                            personaPrompt: updatedPrompt,
+                            speakingRate: voiceSpeed,
+                          };
+                          setActiveCampaign({
+                            ...activeCampaign,
+                            voicePersona: nextPersona,
+                          });
+                          void handleUpdateCampaignField({ voicePersona: nextPersona });
+                        }}
+                        className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
+                      >
+                        {VOICE_STYLE_OPTIONS.map((styleOpt) => (
+                          <option key={styleOpt} value={styleOpt}>
+                            {styleOpt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Always-Available Voice Direction Prompt alongside Dropdowns */}
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Voice Direction Prompt (Fine-tune tone & pacing alongside dropdowns)
+                    </label>
+                    <input
+                      type="text"
+                      data-testid="voice-prompt-input"
+                      value={voicePersonaPrompt}
+                      onChange={(e) => {
+                        setVoicePersonaPrompt(e.target.value);
+                        setActiveCampaign({
+                          ...activeCampaign,
+                          voicePersona: {
+                            ...activeCampaign.voicePersona,
+                            personaPrompt: e.target.value,
+                          },
+                        });
+                      }}
+                      onBlur={() =>
+                        void handleUpdateCampaignField({
+                          voicePersona: {
+                            ...activeCampaign.voicePersona,
+                            personaPrompt: voicePersonaPrompt,
+                            speakingRate: voiceSpeed,
+                          },
+                        })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200"
+                    />
                   </div>
                 </div>
 
@@ -1306,7 +1504,11 @@ export function App() {
                           Voice Sample Preview
                         </div>
                         <audio
+                          data-voiceover-player="true"
                           src={audioView.voiceSampleAudioUrl}
+                          onPlay={(e) => {
+                            e.currentTarget.playbackRate = voiceSpeed;
+                          }}
                           controls
                           className="w-full h-8"
                         />
@@ -1326,6 +1528,9 @@ export function App() {
                           <span className="text-xs font-bold text-white">
                             Scene 0{scene.sceneNumber}: {scene.title}
                           </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono">
+                            {voiceSpeed}x Pace
+                          </span>
                           {scene.isStale && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 font-semibold">
                               Out of Sync
@@ -1335,7 +1540,11 @@ export function App() {
                         <p className="text-xs text-slate-300 italic">"{scene.voiceoverScript}"</p>
                         {scene.activeVoiceoverUrl && (
                           <audio
+                            data-voiceover-player="true"
                             src={scene.activeVoiceoverUrl}
+                            onPlay={(e) => {
+                              e.currentTarget.playbackRate = voiceSpeed;
+                            }}
                             controls
                             className="w-full max-w-md h-8 mt-2"
                           />
@@ -1362,7 +1571,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* Right 5 Cols: Campaign Soundtrack Composer */}
+              {/* Right 5 Cols: Campaign Soundtrack Composer with Dropdown Controls + Prompt */}
               <div className="lg:col-span-5 space-y-6">
                 <section className="bg-[#0D1326] border border-slate-800/90 rounded-2xl p-5 space-y-4">
                   <div>
@@ -1371,27 +1580,131 @@ export function App() {
                       Campaign Soundtrack
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Composes a custom instrumental score matched to your storyboard scenes and
-                      mood.
+                      Choose a musical style, tempo, and instrumentation or customize the prompt
+                      below.
                     </p>
                   </div>
 
-                  <textarea
-                    rows={2}
-                    value={activeCampaign.musicalMoodPrompt}
-                    onChange={(e) =>
-                      setActiveCampaign({
-                        ...activeCampaign,
-                        musicalMoodPrompt: e.target.value,
-                      })
-                    }
-                    onBlur={() =>
-                      void handleUpdateCampaignField({
-                        musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
-                  />
+                  {/* Soundtrack Dropdown Controls */}
+                  <div className="space-y-2.5 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                        Soundtrack Style / Genre
+                      </label>
+                      <select
+                        data-testid="music-genre-select"
+                        value={musicGenre}
+                        onChange={(e) => {
+                          const nextGenre = e.target.value;
+                          setMusicGenre(nextGenre);
+                          const composed = composeSoundtrackPromptFromSelections({
+                            genre: nextGenre,
+                            tempo: musicTempo,
+                            instruments: musicInstruments,
+                          });
+                          setActiveCampaign({
+                            ...activeCampaign,
+                            musicalMoodPrompt: composed,
+                          });
+                          void handleUpdateCampaignField({ musicalMoodPrompt: composed });
+                        }}
+                        className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
+                      >
+                        {MUSIC_GENRE_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          Tempo & Energy
+                        </label>
+                        <select
+                          data-testid="music-tempo-select"
+                          value={musicTempo}
+                          onChange={(e) => {
+                            const nextTempo = e.target.value;
+                            setMusicTempo(nextTempo);
+                            const composed = composeSoundtrackPromptFromSelections({
+                              genre: musicGenre,
+                              tempo: nextTempo,
+                              instruments: musicInstruments,
+                            });
+                            setActiveCampaign({
+                              ...activeCampaign,
+                              musicalMoodPrompt: composed,
+                            });
+                            void handleUpdateCampaignField({ musicalMoodPrompt: composed });
+                          }}
+                          className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-sky-300 font-semibold focus:border-sky-500 focus:outline-none"
+                        >
+                          {MUSIC_TEMPO_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                          Instrumentation
+                        </label>
+                        <select
+                          data-testid="music-instruments-select"
+                          value={musicInstruments}
+                          onChange={(e) => {
+                            const nextInst = e.target.value;
+                            setMusicInstruments(nextInst);
+                            const composed = composeSoundtrackPromptFromSelections({
+                              genre: musicGenre,
+                              tempo: musicTempo,
+                              instruments: nextInst,
+                            });
+                            setActiveCampaign({
+                              ...activeCampaign,
+                              musicalMoodPrompt: composed,
+                            });
+                            void handleUpdateCampaignField({ musicalMoodPrompt: composed });
+                          }}
+                          className="w-full bg-slate-950 border border-slate-700/90 rounded-lg px-2.5 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
+                        >
+                          {MUSIC_INSTRUMENT_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Soundtrack Prompt (Auto-updates from dropdowns or edit directly)
+                    </label>
+                    <textarea
+                      rows={2}
+                      data-testid="soundtrack-prompt-textarea"
+                      value={activeCampaign.musicalMoodPrompt}
+                      onChange={(e) =>
+                        setActiveCampaign({
+                          ...activeCampaign,
+                          musicalMoodPrompt: e.target.value,
+                        })
+                      }
+                      onBlur={() =>
+                        void handleUpdateCampaignField({
+                          musicalMoodPrompt: activeCampaign.musicalMoodPrompt,
+                        })
+                      }
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+                    />
+                  </div>
 
                   <div className="flex gap-2">
                     <button
@@ -1482,9 +1795,12 @@ export function App() {
                   <div className="space-y-3">
                     <div className="aspect-video rounded-xl bg-slate-950 border border-emerald-500/40 overflow-hidden relative">
                       <video
+                        key={finalCutView.masterVideoUrl}
                         data-testid="master-cut-video-player"
                         src={finalCutView.masterVideoUrl}
                         controls
+                        playsInline
+                        preload="metadata"
                         className="w-full h-full object-cover"
                       />
                     </div>

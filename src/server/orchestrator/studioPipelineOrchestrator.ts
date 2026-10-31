@@ -363,8 +363,10 @@ export class StudioPipelineOrchestrator {
         campaignId: campaign.id,
         sceneId: scene.id,
         text,
-        vocalStyleDirective: scene.vocalStyleDirective,
+        vocalStyleDirective:
+          campaign.voicePersona.vocalStylePreset || scene.vocalStyleDirective,
         voiceId: campaign.voicePersona.voiceId,
+        speakingRate: campaign.voicePersona.speakingRate,
         previousInteractionId,
       });
     } catch (err) {

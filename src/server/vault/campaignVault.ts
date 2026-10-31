@@ -141,9 +141,7 @@ export class CampaignVault {
     if (db.brandKits.length === 0) {
       db.brandKits.push(structuredClone(DEFAULT_CYMBAL_BRAND_KIT));
     }
-    if (db.starterTemplates.length === 0) {
-      db.starterTemplates = structuredClone(STARTER_CAMPAIGN_TEMPLATES);
-    }
+    db.starterTemplates = structuredClone(STARTER_CAMPAIGN_TEMPLATES);
     this.writeDb(db);
   }
 

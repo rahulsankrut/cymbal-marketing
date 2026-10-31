@@ -77,3 +77,6 @@ Transform the Cymbal Aerospace Studio frontend into **Option A: 4-Step Storycraf
 ## Further Notes
 
 - The 3 throwaway Google Material 3 UX prototypes remain accessible at `/prototypes/index.html` for design reference.
+
+## Fast-Lane Prompt Updates
+- 2026-10-30: Simplified Step 1 presets into Kids / College / Executive 1-sentence use cases (`seedData.ts`), made Motion Clips primary by default (`DEFAULT_STORYBOARD_PREVIEW_MODE = 'video'`) with Keyframes toggle in Step 2 (`studioViewModel.ts`, `App.tsx`), added Voice Preset / Speed (`1.25x` default + FFmpeg `atempo`) / Style and Soundtrack Genre / Tempo / Instruments dropdowns alongside prompt inputs in Step 3 (`geminiStudioGateway.ts`, `studioViewModel.ts`, `App.tsx`), and fixed `MasterTimelineAssembler.assembleMasterCut` to write `-movflags +faststart` `.mp4` directly to disk (`128 MB` `maxBuffer`, stitching real scene motion videos + voiceovers + ducked music) so Step 4 Final Cut plays in-browser.

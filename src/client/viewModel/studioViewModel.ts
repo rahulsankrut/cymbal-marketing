@@ -78,6 +78,106 @@ export function buildCalmBriefViewState(
 
 export type StoryboardMediaPreviewMode = 'image' | 'video';
 
+export const DEFAULT_STORYBOARD_PREVIEW_MODE: StoryboardMediaPreviewMode = 'video';
+
+export interface VoicePresetOption {
+  voiceId: string;
+  displayName: string;
+  gender: 'female' | 'male' | 'neutral';
+  defaultStyle: string;
+  defaultPrompt: string;
+}
+
+export const VOICE_PRESET_OPTIONS: ReadonlyArray<VoicePresetOption> = [
+  {
+    voiceId: 'Kore',
+    displayName: 'Kore — Warm & Crisp Commercial (Default)',
+    gender: 'female',
+    defaultStyle: 'Crisp, upbeat, fast-paced commercial narrator',
+    defaultPrompt:
+      'A brisk, upbeat, and clear commercial narrator with crisp modern pacing and engaging warmth.',
+  },
+  {
+    voiceId: 'Puck',
+    displayName: 'Puck — Friendly & Playful (Kids / STEM)',
+    gender: 'neutral',
+    defaultStyle: 'Friendly, curious, energetic kids science host',
+    defaultPrompt:
+      'An enthusiastic, friendly science storyteller with bright energy and playful curiosity for young learners.',
+  },
+  {
+    voiceId: 'Aoede',
+    displayName: 'Aoede — Inspiring & Clear (College / Innovation)',
+    gender: 'female',
+    defaultStyle: 'Inspiring, clear university innovation presenter',
+    defaultPrompt:
+      'An articulate, inspiring university innovation host with clear diction and forward-looking energy.',
+  },
+  {
+    voiceId: 'Fenrir',
+    displayName: 'Fenrir — Bold & Dynamic (Executive Launch)',
+    gender: 'male',
+    defaultStyle: 'Confident, concise executive keynote speaker',
+    defaultPrompt:
+      'A confident, fast-paced executive keynote presenter with punchy delivery and modern gravitas.',
+  },
+  {
+    voiceId: 'Charon',
+    displayName: 'Charon — Deep & Steady (Cinema Trailer)',
+    gender: 'male',
+    defaultStyle: 'Warm cinematic storyteller',
+    defaultPrompt:
+      'A resonant, warm cinematic narrator with smooth pacing and clear articulation.',
+  },
+];
+
+export const VOICE_SPEED_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
+  { value: 1.25, label: '1.25x — Fast & Energetic (Recommended)' },
+  { value: 1.15, label: '1.15x — Crisp Commercial Pace' },
+  { value: 1.4, label: '1.40x — Rapid Executive Summary' },
+  { value: 1.0, label: '1.00x — Standard Natural Pace' },
+  { value: 0.95, label: '0.95x — Measured Storyteller' },
+];
+
+export const VOICE_STYLE_OPTIONS: ReadonlyArray<string> = [
+  'Crisp, upbeat, fast-paced commercial narrator',
+  'Friendly, curious, energetic kids science host',
+  'Inspiring, clear university innovation presenter',
+  'Confident, concise executive keynote speaker',
+  'Warm cinematic storyteller',
+];
+
+export const MUSIC_GENRE_OPTIONS: ReadonlyArray<string> = [
+  'Playful, upbeat orchestral adventure (Kids / Wonder)',
+  'Upbeat indie electronic synth pulse (College / Tech)',
+  'Crisp, modern executive keynote pulse (Executive Launch)',
+  'Crystalline ambient piano & warm synth pad (Minimalist)',
+  'High-energy cinematic percussion & brass (Action Spot)',
+];
+
+export const MUSIC_TEMPO_OPTIONS: ReadonlyArray<string> = [
+  '120 BPM (Fast & Upbeat)',
+  '128 BPM (High-Energy Drive)',
+  '112 BPM (Crisp Modern Groove)',
+  '96 BPM (Steady Cinematic Pulse)',
+  '84 BPM (Calm & Atmospheric)',
+];
+
+export const MUSIC_INSTRUMENT_OPTIONS: ReadonlyArray<string> = [
+  'Bright Pizzicato Strings, Glockenspiel & Cheerful Horns',
+  'Warm Analog Synths, Acoustic Guitar & Snappy Drums',
+  'Confident Piano, Soaring Strings & Subtle Sub-Bass',
+  'Full Symphony Brass, Cello Section & Timpani',
+];
+
+export function composeSoundtrackPromptFromSelections(params: {
+  genre: string;
+  tempo: string;
+  instruments: string;
+}): string {
+  return `${params.genre} featuring ${params.instruments} at ${params.tempo}.`;
+}
+
 export interface VisualSceneCardViewModel {
   sceneId: string;
   sceneNumber: number;
@@ -86,6 +186,7 @@ export interface VisualSceneCardViewModel {
   spokenNarrationPreview: string;
   previewMode: StoryboardMediaPreviewMode;
   activeMediaUrl?: string;
+  posterImageUrl?: string;
   activeModality: 'keyframe_start' | 'motion_video';
   hasKeyframe: boolean;
   hasMotionVideo: boolean;
@@ -96,7 +197,7 @@ export interface VisualSceneCardViewModel {
 
 export function buildVisualSceneCards(
   campaign: CampaignDetail,
-  previewMode: StoryboardMediaPreviewMode
+  previewMode: StoryboardMediaPreviewMode = DEFAULT_STORYBOARD_PREVIEW_MODE
 ): VisualSceneCardViewModel[] {
   const findTake = (takeId?: string): AssetTake | undefined =>
     takeId ? campaign.takes.find((t) => t.id === takeId) : undefined;
@@ -121,6 +222,7 @@ export function buildVisualSceneCards(
       spokenNarrationPreview: scene.voiceoverScript,
       previewMode,
       activeMediaUrl: activeTake?.mediaUrl,
+      posterImageUrl: kfTake?.mediaUrl,
       activeModality,
       hasKeyframe: Boolean(kfTake),
       hasMotionVideo: Boolean(vidTake),

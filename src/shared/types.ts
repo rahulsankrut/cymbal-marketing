@@ -21,6 +21,8 @@ export interface VoicePersonaConfig {
   gender: 'male' | 'female' | 'neutral';
   languageCode: string;
   personaPrompt: string;
+  speakingRate?: number;
+  vocalStylePreset?: string;
   sampleAudioUrl?: string;
   isDesignedVoice?: boolean;
 }

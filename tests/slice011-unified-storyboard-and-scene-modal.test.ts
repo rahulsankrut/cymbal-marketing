@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_STORYBOARD_PREVIEW_MODE,
   buildVisualSceneCards,
   buildSceneInspectorModalState,
 } from '../src/client/viewModel/studioViewModel.js';
@@ -97,9 +98,11 @@ describe('Slice 011 — Unified Visual Storyboard & On-Demand Scene Inspector Mo
     expect(imageCards[0].activeMediaUrl).toBe('/media/take-kf-1.png');
     expect(imageCards[0].staleSummary).toBe('Out of Sync: Motion');
 
+    expect(DEFAULT_STORYBOARD_PREVIEW_MODE).toBe('video');
     const videoCards = buildVisualSceneCards(campaign, 'video');
     expect(videoCards[0].activeModality).toBe('motion_video');
     expect(videoCards[0].activeMediaUrl).toBe('/media/take-vid-1.mp4');
+    expect(videoCards[0].posterImageUrl).toBe('/media/take-kf-1.png');
 
     const modalState = buildSceneInspectorModalState(campaign, 'scene-1');
     expect(modalState).not.toBeNull();

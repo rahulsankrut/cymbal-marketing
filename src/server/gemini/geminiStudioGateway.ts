@@ -1,6 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join, basename } from 'node:path';
+import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import ffmpegPath from 'ffmpeg-static';
 import { GoogleGenAI } from '@google/genai';
 import type {
   AssetTake,
@@ -96,6 +99,7 @@ export interface VoiceoverInteractionRequest {
   text: string;
   vocalStyleDirective: string;
   voiceId: string;
+  speakingRate?: number;
   previousInteractionId?: string;
 }
 
@@ -726,7 +730,8 @@ export class GeminiStudioGateway {
     // Live Vertex AI path
     if (this.isVertexAi && this.vertexGlobal) {
       const selectedVoice = selectGeminiTtsVoiceName(request.voiceId);
-      const styledPrompt = `Speak in ${request.vocalStyleDirective || 'authoritative aerospace narration'}: ${request.text}`;
+      const targetRate = Math.min(1.6, Math.max(0.8, request.speakingRate || 1.25));
+      const styledPrompt = `Speak at a brisk, crisp ${targetRate}x commercial pace in ${request.vocalStyleDirective || 'upbeat, clear commercial narration'}: ${request.text}`;
 
       const response = await this.vertexGlobal.models.generateContent({
         model: 'gemini-2.5-flash-tts',
@@ -752,8 +757,44 @@ export class GeminiStudioGateway {
       }
 
       const rawPcm = Buffer.from(audioPart.inlineData.data, 'base64');
-      const wavBuffer = wrapRawPcm16MonoInWav(rawPcm, 24000);
-      const durationSeconds = Number((rawPcm.length / (24000 * 2)).toFixed(2));
+      let wavBuffer = wrapRawPcm16MonoInWav(rawPcm, 24000);
+      let durationSeconds = Number((rawPcm.length / (24000 * 2)).toFixed(2));
+
+      // Apply FFmpeg atempo time-stretch so voiceover plays at the exact chosen pace without pitch shift
+      if (Math.abs(targetRate - 1.0) > 0.03) {
+        const tmpIn = join(tmpdir(), `tts-in-${randomUUID().slice(0, 8)}.wav`);
+        const tmpOut = join(tmpdir(), `tts-out-${randomUUID().slice(0, 8)}.wav`);
+        try {
+          writeFileSync(tmpIn, wavBuffer);
+          const ffmpegBin = (ffmpegPath as unknown as string) || 'ffmpeg';
+          execFileSync(
+            ffmpegBin,
+            ['-y', '-v', 'error', '-i', tmpIn, '-filter:a', `atempo=${targetRate}`, tmpOut],
+            { timeout: 10000 }
+          );
+          if (existsSync(tmpOut)) {
+            wavBuffer = readFileSync(tmpOut);
+            durationSeconds = Number((durationSeconds / targetRate).toFixed(2));
+          }
+        } catch {
+          // keep original wavBuffer if atempo fails
+        } finally {
+          if (existsSync(tmpIn)) {
+            try {
+              unlinkSync(tmpIn);
+            } catch {
+              // ignore
+            }
+          }
+          if (existsSync(tmpOut)) {
+            try {
+              unlinkSync(tmpOut);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
 
       return {
         interactionId: response.responseId || `inter-tts-${randomUUID().slice(0, 8)}`,
