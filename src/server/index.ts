@@ -27,6 +27,7 @@ if (existsSync(envPath)) {
 
 const DATA_DIR = process.env.STUDIO_DATA_DIR || join(ROOT_DIR, '.data');
 const PORT = Number(process.env.PORT || 4190);
+const HOST = process.env.HOST || (process.env.K_SERVICE ? '0.0.0.0' : '127.0.0.1');
 
 async function start() {
   const vault = new CampaignVault(DATA_DIR);
@@ -52,8 +53,8 @@ async function start() {
     });
   }
 
-  app.listen(PORT, '127.0.0.1', () => {
-    console.log(`[Cymbal Aerospace Marketing Studio] API & Media Vault listening on http://127.0.0.1:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`[Cymbal Aerospace Marketing Studio] API & Media Vault listening on http://${HOST}:${PORT}`);
   });
 }
 

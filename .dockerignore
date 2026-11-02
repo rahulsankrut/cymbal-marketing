@@ -1,0 +1,12 @@
+node_modules
+.data
+.git
+.env
+dist
+tests
+issues
+ralph
+.ai-workflow.json
+research.md
+client-brief.md
+*.log

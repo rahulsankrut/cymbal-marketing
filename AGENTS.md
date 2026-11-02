@@ -56,6 +56,7 @@
 
 ---
 
-## 3. REST API & Verification Commands
-- **Key Routes ([`src/server/app.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/app.ts))**: `GET /api/bootstrap`, `POST /api/campaigns`, `PATCH /api/campaigns/:id`, `POST /api/campaigns/:id/storyboard/generate` (accepts atomic `{ title, targetAudience, creativeBrief }`), `POST /api/campaigns/:id/scenes/:sceneId/generate` & `POST /api/campaigns/:id/batch-generate` (accept atomic `{ speakingRate, voiceId, vocalStylePreset }`), `POST /api/campaigns/:id/voice-design`, `POST /api/campaigns/:id/music/generate`, `POST /api/campaigns/:id/assemble`, `GET /api/campaigns/:id/events` (SSE).
+## 3. REST API, Cloud Run Deployment & Verification Commands
+- **Key Routes ([`src/server/app.ts`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/src/server/app.ts))**: `GET /api/health`, `GET /api/bootstrap`, `POST /api/campaigns`, `PATCH /api/campaigns/:id`, `POST /api/campaigns/:id/storyboard/generate` (accepts atomic `{ title, targetAudience, creativeBrief }`), `POST /api/campaigns/:id/scenes/:sceneId/generate` & `POST /api/campaigns/:id/batch-generate` (accept atomic `{ speakingRate, voiceId, vocalStylePreset }`), `POST /api/campaigns/:id/voice-design`, `POST /api/campaigns/:id/music/generate`, `POST /api/campaigns/:id/assemble`, `GET /api/campaigns/:id/events` (SSE).
+- **Cloud Run Deployment (`vertex-ai-demos-468803`, `us-central1`)**: Live at `https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app` ([`Dockerfile`](file:///Users/rahulsankrut/Desktop/Cybmal%20Aerospace%20Marketing/Dockerfile): `node:22-bookworm-slim` + `ffmpeg`, `HOST=0.0.0.0`, `STUDIO_DATA_DIR=/tmp/studio-data`, keyless Vertex AI ADC).
 - **Build & Test**: Run `npm run build && npm test` (10 Vitest suites, 17 behavioral tests, TypeScript `--noEmit`, and Vite production bundle).

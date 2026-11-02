@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-11-02T16:49:30.631Z",
+  "updatedAt": "2026-11-02T16:58:18.624Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -518,7 +518,7 @@
           "title": "Cloud Deployment",
           "mode": "Guided",
           "status": "in_progress",
-          "notes": "Confirmed target Google Cloud Dev Project ID vertex-ai-demos-468803 (Vertex AI Demos). Verified active principal admin@rahulsankrut.altostrat.com, local ADC, IAM roles (roles/owner, roles/aiplatform.admin, roles/artifactregistry.writer, roles/cloudbuild.builds.editor, roles/iam.serviceAccountUser, roles/serviceusage.serviceUsageAdmin), and verified all 6 required APIs enabled (run.googleapis.com, artifactregistry.googleapis.com, cloudbuild.googleapis.com, aiplatform.googleapis.com, generativelanguage.googleapis.com, secretmanager.googleapis.com) with keyless Vertex AI ADC runtime config.",
+          "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app (2 vCPU, 2 GiB RAM, 300s timeout, FFmpeg + Node 22 + keyless Vertex AI ADC). Verified live /api/health, /api/bootstrap, and SPA HTML HTTP 200.",
           "items": [
             {
               "id": "p8-gcp-project",
@@ -533,7 +533,7 @@
             {
               "id": "p8-deploy",
               "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
-              "completed": false
+              "completed": true
             },
             {
               "id": "p8-smoke-test",
@@ -780,7 +780,7 @@
       "title": "Cloud Deployment",
       "mode": "Guided",
       "status": "in_progress",
-      "notes": "Confirmed target Google Cloud Dev Project ID vertex-ai-demos-468803 (Vertex AI Demos). Verified active principal admin@rahulsankrut.altostrat.com, local ADC, IAM roles (roles/owner, roles/aiplatform.admin, roles/artifactregistry.writer, roles/cloudbuild.builds.editor, roles/iam.serviceAccountUser, roles/serviceusage.serviceUsageAdmin), and verified all 6 required APIs enabled (run.googleapis.com, artifactregistry.googleapis.com, cloudbuild.googleapis.com, aiplatform.googleapis.com, generativelanguage.googleapis.com, secretmanager.googleapis.com) with keyless Vertex AI ADC runtime config.",
+      "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app (2 vCPU, 2 GiB RAM, 300s timeout, FFmpeg + Node 22 + keyless Vertex AI ADC). Verified live /api/health, /api/bootstrap, and SPA HTML HTTP 200.",
       "items": [
         {
           "id": "p8-gcp-project",
@@ -795,7 +795,7 @@
         {
           "id": "p8-deploy",
           "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
-          "completed": false
+          "completed": true
         },
         {
           "id": "p8-smoke-test",

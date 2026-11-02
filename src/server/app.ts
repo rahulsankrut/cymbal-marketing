@@ -26,6 +26,16 @@ export function createStudioApp(deps: StudioAppDependencies): Express {
   app.use(express.json({ limit: '50mb' }));
   app.use('/media', express.static(vault.getMediaDir()));
 
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'cymbal-aerospace-marketing-studio',
+      project: process.env.GOOGLE_CLOUD_PROJECT || 'vertex-ai-demos-468803',
+      vertexAi: process.env.GOOGLE_GENAI_USE_VERTEXAI === '1',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   app.get('/api/bootstrap', async (_req, res) => {
     try {
       const [brandKits, starterTemplates, campaigns] = await Promise.all([
