@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-10-31T04:16:51.650Z",
+  "updatedAt": "2026-11-02T16:49:30.631Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -17,42 +17,42 @@
         {
           "id": "phase-1",
           "number": 1,
-          "title": "Idea, Research & Prototyping",
-          "mode": "HITL",
+          "title": "Brief & Setup",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Synthesized research.md across 4 cloned Google GenMedia repos (genmedia-creative-studio, dreamboard, storycraft, vigenair), 6 internal Ad Marketing Skills, and live Vertex AI ADC (vertex-ai-demos-468803) endpoint verification.",
           "items": [
             {
               "id": "p1-brief",
-              "label": "Capture feature brief or stakeholder transcript (client-brief.md)",
+              "label": "Write problem brief (client-brief.md)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-scaffold",
-              "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
+              "label": "Initialize project workspace (AGENTS.md, issues/, ralph/)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-credentials",
-              "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
+              "label": "Verify Cloud authentication & API keys (.env)",
               "completed": true,
               "userToggled": true,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-research",
-              "label": "Cache codebase & domain exploration in research.md (optional)",
+              "label": "Document codebase & domain context in research.md (optional)",
               "completed": true,
               "userToggled": true,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-prototype",
-              "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
+              "label": "Explore UI direction with quick prototypes (optional)",
               "completed": false,
               "userToggled": true,
               "manuallyUnchecked": true
@@ -62,30 +62,30 @@
         {
           "id": "phase-2",
           "number": 2,
-          "title": "The Grill Session (Native /grill-me)",
-          "mode": "HITL",
+          "title": "Design Discovery",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Aligned on 6-stage Guided Studio Pipeline + Non-Linear Scene Canvas, Full-Stack TypeScript (@google/genai >=2.29.1 + Express/Fastify + SQLite/JSON + FFmpeg), Nano Banana 2.1 reference fusion + Omni 1.1 Flash keyframe-locked motion with stateful previous_interaction_id editing, Gemini 3.8 Flash TTS Voice Design + keyframe-conditioned Lyria 3.5 scoring with -12dB ducking, Multimodal Structured Brand Eval with 1-click auto-fix, and pre-seeded Cymbal Aerospace Brand Kit with non-destructive stale cascades.",
           "items": [
             {
               "id": "p2-invoke",
-              "label": "Run native /grill-me interview against client-brief.md & codebase",
+              "label": "Run interactive design Q&A (/grill-me) on the brief",
               "completed": true,
               "userToggled": true
             },
             {
               "id": "p2-decisions",
-              "label": "Resolve decision tree dependencies one by one",
+              "label": "Resolve core user flows & architecture choices",
               "completed": true
             },
             {
               "id": "p2-edgecases",
-              "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
+              "label": "Define auth, data model & error-handling edge cases",
               "completed": true
             },
             {
               "id": "p2-shared",
-              "label": "Confirm shared design concept (Fred Brooks alignment)",
+              "label": "Lock in final design direction",
               "completed": true
             }
           ]
@@ -93,29 +93,29 @@
         {
           "id": "phase-3",
           "number": 3,
-          "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
-          "mode": "HITL",
+          "title": "Technical Spec (PRD)",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Generated issues/prd.md with 5 Deep Modules (CampaignVault, GeminiStudioGateway, StudioPipelineOrchestrator, MasterTimelineAssembler, StudioWorkspaceUI), behavioral testing boundaries, and negative Out of Scope constraints.",
           "items": [
             {
               "id": "p3-modules",
-              "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
+              "label": "Define core modules & public interfaces (/plan)",
               "completed": true
             },
             {
               "id": "p3-testing",
-              "label": "Confirm behavioral testing decisions & required credentials",
+              "label": "Specify integration test boundaries & required credentials",
               "completed": true
             },
             {
               "id": "p3-outofscope",
-              "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
+              "label": "Document explicit non-goals & out-of-scope items",
               "completed": true
             },
             {
               "id": "p3-prd-written",
-              "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
+              "label": "Write technical spec (issues/prd.md)",
               "completed": true
             }
           ]
@@ -123,34 +123,34 @@
         {
           "id": "phase-4",
           "number": 4,
-          "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
-          "mode": "HITL",
+          "title": "Task Breakdown",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Sliced issues/prd.md into 7 end-to-end vertical tracer-bullet tickets (issues/001-*.md through issues/007-*.md) with explicit Blocked-by DAG dependencies and AFK/HITL classifications.",
           "items": [
             {
               "id": "p4-draft",
-              "label": "Draft vertical tracer-bullet slices from issues/prd.md",
+              "label": "Break issues/prd.md into end-to-end feature slices",
               "completed": true
             },
             {
               "id": "p4-tracer",
-              "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
+              "label": "Verify Task #1 delivers a working end-to-end slice (schema + API + UI + test)",
               "completed": true
             },
             {
               "id": "p4-afk-tags",
-              "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
+              "label": "Tag each task as Autonomous (AFK) or Guided (HITL)",
               "completed": true
             },
             {
               "id": "p4-dag",
-              "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
+              "label": "Map task dependencies (Blocked by)",
               "completed": true
             },
             {
               "id": "p4-created",
-              "label": "Write local markdown tickets (issues/NNN-*.md)",
+              "label": "Save task files to issues/",
               "completed": true
             }
           ]
@@ -158,34 +158,34 @@
         {
           "id": "phase-5",
           "number": 5,
-          "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
-          "mode": "AFK",
+          "title": "Test-Driven Build (TDD)",
+          "mode": "Autonomous",
           "status": "completed",
           "notes": "Completed all 7 vertical tracer-bullet slices (001 through 007) via Vertical TDD across 5 Deep Modules (CampaignVault, GeminiStudioGateway, StudioPipelineOrchestrator, MasterTimelineAssembler, StudioWorkspaceUI). All 7 Vitest test suites (9 behavioral tests), TypeScript typecheck, and Vite production build pass with 0 errors; tickets moved to issues/done/.",
           "items": [
             {
               "id": "p5-once",
-              "label": "Rehearse single vertical slice iteration & observe agent",
+              "label": "Run first task with Red-Green-Refactor TDD (/tdd)",
               "completed": true
             },
             {
               "id": "p5-tdd",
-              "label": "Verify strict vertical TDD (1 failing test RED -> minimal code GREEN -> repeat)",
+              "label": "Verify behavioral tests pass against real interfaces (no production mock fallbacks)",
               "completed": true
             },
             {
               "id": "p5-loops",
-              "label": "Verify automated feedback loops pass (tests + typecheck)",
+              "label": "Pass full test suite & typecheck",
               "completed": true
             },
             {
               "id": "p5-commit",
-              "label": "Verify structured commit & move completed ticket to issues/done/",
+              "label": "Commit changes & move completed task to issues/done/",
               "completed": true
             },
             {
               "id": "p5-afk-all",
-              "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
+              "label": "Complete all unblocked tasks (/goal or /teamwork)",
               "completed": true
             }
           ]
@@ -193,29 +193,29 @@
         {
           "id": "phase-6",
           "number": 6,
-          "title": "Review & Live Browser QA (Native /browser + Prebuilt Critique)",
-          "mode": "HITL",
+          "title": "Code Review & Browser QA",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Completed fresh-context automated code review and live 6-stage browser QA on http://127.0.0.1:4190. Resolved all findings via vertical ticket 008-phase6-review-and-qa-hardening.md and archived issues/prd.md to issues/done/prd.md.",
           "items": [
             {
               "id": "p6-review",
-              "label": "Run fresh-context automated code review with pushed coding standards",
+              "label": "Run automated code & security review against issues/prd.md",
               "completed": true
             },
             {
               "id": "p6-manual-qa",
-              "label": "Run live browser QA (Native /browser + prebuilt design-critique / chrome-devtools)",
+              "label": "Test live user flows end-to-end in the browser (/browser)",
               "completed": true
             },
             {
               "id": "p6-qa-tickets",
-              "label": "File any discovered QA bugs as new vertical tickets in issues/",
+              "label": "Log any QA bugs as follow-up tasks in issues/",
               "completed": true
             },
             {
               "id": "p6-archive-prd",
-              "label": "Archive completed issues/prd.md into issues/done/ to prevent Doc Rot",
+              "label": "Archive completed issues/prd.md to issues/done/",
               "completed": true
             }
           ]
@@ -223,24 +223,24 @@
         {
           "id": "phase-7",
           "number": 7,
-          "title": "Deep Architecture & Memory (Native /learn)",
-          "mode": "HITL",
+          "title": "Architecture & Learnings",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Completed Ousterhout deep-module audit, adopted Design 3 (Caller-Optimized Stage Facade) for StudioPipelineOrchestrator in 009-refactor-deep-pipeline-orchestrator.md, and persisted architectural conventions in AGENTS.md.",
           "items": [
             {
               "id": "p7-explore",
-              "label": "Scan codebase for shallow modules & seam friction",
+              "label": "Audit codebase for tightly coupled or pass-through modules",
               "completed": true
             },
             {
               "id": "p7-compare",
-              "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
+              "label": "Evaluate simpler module interface alternatives",
               "completed": true
             },
             {
               "id": "p7-rfc",
-              "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
+              "label": "Save project conventions & learnings (/learn)",
               "completed": true
             }
           ]
@@ -248,29 +248,29 @@
         {
           "id": "phase-8",
           "number": 8,
-          "title": "Deploy to Dev Environment (Google Cloud Project)",
-          "mode": "HITL",
+          "title": "Cloud Deployment",
+          "mode": "Guided",
           "status": "not_started",
           "notes": "",
           "items": [
             {
               "id": "p8-gcp-project",
-              "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
+              "label": "Confirm target Google Cloud project, billing & IAM (/gcloud)",
               "completed": false
             },
             {
               "id": "p8-apis-secrets",
-              "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
+              "label": "Enable required Cloud APIs & configure secrets",
               "completed": false
             },
             {
               "id": "p8-deploy",
-              "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+              "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
               "completed": false
             },
             {
               "id": "p8-smoke-test",
-              "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+              "label": "Smoke-test live deployment URL in browser (/browser)",
               "completed": false
             }
           ]
@@ -287,38 +287,38 @@
         {
           "id": "phase-1",
           "number": 1,
-          "title": "Idea, Research & Prototyping",
-          "mode": "HITL",
+          "title": "Brief & Setup",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Completed UI/UX cognitive load audit of src/client/App.tsx (1,098 lines) vs. Storycraft & Material 3 progressive disclosure patterns, verified Vertex AI ADC (vertex-ai-demos-468803), and updated research.md.",
           "items": [
             {
               "id": "p1-brief",
-              "label": "Capture feature brief or stakeholder transcript (client-brief.md)",
+              "label": "Write problem brief (client-brief.md)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-scaffold",
-              "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
+              "label": "Initialize project workspace (AGENTS.md, issues/, ralph/)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p1-credentials",
-              "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
+              "label": "Verify Cloud authentication & API keys (.env)",
               "completed": true
             },
             {
               "id": "p1-research",
-              "label": "Cache codebase & domain exploration in research.md (optional)",
+              "label": "Document codebase & domain context in research.md (optional)",
               "completed": true
             },
             {
               "id": "p1-prototype",
-              "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
+              "label": "Explore UI direction with quick prototypes (optional)",
               "completed": true
             }
           ]
@@ -326,29 +326,29 @@
         {
           "id": "phase-2",
           "number": 2,
-          "title": "The Grill Session (Native /grill-me)",
-          "mode": "HITL",
+          "title": "Design Discovery",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Aligned on Option A (4-Step Storycraft Pill Flow: 1. Brief, 2. Storyboard & Visuals, 3. Voice & Soundtrack, 4. Final Cut). Removed Brand Guardrails, Custom Brand Kit, Brand Eval Scorecard, raw FFmpeg filtergraphs, and raw interaction/model ID badges from UI. Unified Keyframes & Motion into visual-first Scene Cards with an Image/Video toggle, collapsible Reference Anchors drawer, and On-Demand Scene Inspector Modal.",
           "items": [
             {
               "id": "p2-invoke",
-              "label": "Run native /grill-me interview against client-brief.md & codebase",
+              "label": "Run interactive design Q&A (/grill-me) on the brief",
               "completed": true
             },
             {
               "id": "p2-decisions",
-              "label": "Resolve decision tree dependencies one by one",
+              "label": "Resolve core user flows & architecture choices",
               "completed": true
             },
             {
               "id": "p2-edgecases",
-              "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
+              "label": "Define auth, data model & error-handling edge cases",
               "completed": true
             },
             {
               "id": "p2-shared",
-              "label": "Confirm shared design concept (Fred Brooks alignment)",
+              "label": "Lock in final design direction",
               "completed": true
             }
           ]
@@ -356,29 +356,29 @@
         {
           "id": "phase-3",
           "number": 3,
-          "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
-          "mode": "HITL",
+          "title": "Technical Spec (PRD)",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Generated issues/prd.md for Iteration #2 (Option A 4-Step Storycraft Flow + On-Demand Scene Inspector Modal, studioViewModel deep module, and removal of Brand Guardrails / Brand Eval Scorecard / raw FFmpeg telemetry).",
           "items": [
             {
               "id": "p3-modules",
-              "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
+              "label": "Define core modules & public interfaces (/plan)",
               "completed": true
             },
             {
               "id": "p3-testing",
-              "label": "Confirm behavioral testing decisions & required credentials",
+              "label": "Specify integration test boundaries & required credentials",
               "completed": true
             },
             {
               "id": "p3-outofscope",
-              "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
+              "label": "Document explicit non-goals & out-of-scope items",
               "completed": true
             },
             {
               "id": "p3-prd-written",
-              "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
+              "label": "Write technical spec (issues/prd.md)",
               "completed": true
             }
           ]
@@ -386,34 +386,34 @@
         {
           "id": "phase-4",
           "number": 4,
-          "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
-          "mode": "HITL",
+          "title": "Task Breakdown",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Sliced Iteration #2 PRD into 3 vertical tracer-bullet tickets (010-4step-pill-nav-and-calm-brief-tracer.md, 011-unified-visual-storyboard-and-scene-modal.md, 012-streamlined-audio-and-pure-final-cut-theater.md).",
           "items": [
             {
               "id": "p4-draft",
-              "label": "Draft vertical tracer-bullet slices from issues/prd.md",
+              "label": "Break issues/prd.md into end-to-end feature slices",
               "completed": true
             },
             {
               "id": "p4-tracer",
-              "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
+              "label": "Verify Task #1 delivers a working end-to-end slice (schema + API + UI + test)",
               "completed": true
             },
             {
               "id": "p4-afk-tags",
-              "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
+              "label": "Tag each task as Autonomous (AFK) or Guided (HITL)",
               "completed": true
             },
             {
               "id": "p4-dag",
-              "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
+              "label": "Map task dependencies (Blocked by)",
               "completed": true
             },
             {
               "id": "p4-created",
-              "label": "Write local markdown tickets (issues/NNN-*.md)",
+              "label": "Save task files to issues/",
               "completed": true
             }
           ]
@@ -421,36 +421,36 @@
         {
           "id": "phase-5",
           "number": 5,
-          "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
-          "mode": "AFK",
+          "title": "Test-Driven Build (TDD)",
+          "mode": "Autonomous",
           "status": "completed",
           "notes": "Completed all 3 vertical slices (010, 011, 012) plus Fast-Lane UX & Playback improvements (Kids/College/Executive 1-sentence presets, Motion Clips primary + Keyframes toggle, Voice Preset/Speed 1.25x/Style & Soundtrack Genre/Tempo/Instruments dropdowns alongside prompts, and disk-backed -movflags +faststart Master Cut .mp4 assembly). All 10 Vitest suites (16 tests) and Vite build pass.",
           "items": [
             {
               "id": "p5-once",
-              "label": "Rehearse single vertical slice iteration & observe agent",
+              "label": "Run first task with Red-Green-Refactor TDD (/tdd)",
               "completed": true
             },
             {
               "id": "p5-tdd",
-              "label": "Verify strict vertical TDD (1 failing test RED -> minimal code GREEN -> repeat)",
+              "label": "Verify behavioral tests pass against real interfaces (no production mock fallbacks)",
               "completed": true
             },
             {
               "id": "p5-loops",
-              "label": "Verify automated feedback loops pass (tests + typecheck)",
+              "label": "Pass full test suite & typecheck",
               "completed": true
             },
             {
               "id": "p5-commit",
-              "label": "Verify structured commit & move completed ticket to issues/done/",
+              "label": "Commit changes & move completed task to issues/done/",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
             },
             {
               "id": "p5-afk-all",
-              "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
+              "label": "Complete all unblocked tasks (/goal or /teamwork)",
               "completed": true,
               "userToggled": false,
               "manuallyUnchecked": false
@@ -460,29 +460,29 @@
         {
           "id": "phase-6",
           "number": 6,
-          "title": "Review & Live Browser QA (Native /browser + Prebuilt Critique)",
-          "mode": "HITL",
+          "title": "Code Review & Browser QA",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Completed fresh-context automated code review, live browser QA on http://127.0.0.1:4190, verified real 16.62 MB H.264/AAC Master Cut .mp4 playback in Step 4, and archived updated PRD to issues/done/prd-iter2.md.",
           "items": [
             {
               "id": "p6-review",
-              "label": "Run fresh-context automated code review with pushed coding standards",
+              "label": "Run automated code & security review against issues/prd.md",
               "completed": true
             },
             {
               "id": "p6-manual-qa",
-              "label": "Run live browser QA (Native /browser + prebuilt design-critique / chrome-devtools)",
+              "label": "Test live user flows end-to-end in the browser (/browser)",
               "completed": true
             },
             {
               "id": "p6-qa-tickets",
-              "label": "File any discovered QA bugs as new vertical tickets in issues/",
+              "label": "Log any QA bugs as follow-up tasks in issues/",
               "completed": true
             },
             {
               "id": "p6-archive-prd",
-              "label": "Archive completed issues/prd.md into issues/done/ to prevent Doc Rot",
+              "label": "Archive completed issues/prd.md to issues/done/",
               "completed": true
             }
           ]
@@ -490,24 +490,24 @@
         {
           "id": "phase-7",
           "number": 7,
-          "title": "Deep Architecture & Memory (Native /learn)",
-          "mode": "HITL",
+          "title": "Architecture & Learnings",
+          "mode": "Guided",
           "status": "completed",
           "notes": "Completed Ousterhout deep-module refactor of studioViewModel across all 4 steps and synced AGENTS.md Living System Map + issues/done/prd-iter2.md Fast-Lane Prompt Updates.",
           "items": [
             {
               "id": "p7-explore",
-              "label": "Scan codebase for shallow modules & seam friction",
+              "label": "Audit codebase for tightly coupled or pass-through modules",
               "completed": true
             },
             {
               "id": "p7-compare",
-              "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
+              "label": "Evaluate simpler module interface alternatives",
               "completed": true
             },
             {
               "id": "p7-rfc",
-              "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
+              "label": "Save project conventions & learnings (/learn)",
               "completed": true
             }
           ]
@@ -515,29 +515,29 @@
         {
           "id": "phase-8",
           "number": 8,
-          "title": "Deploy to Dev Environment (Google Cloud Project)",
-          "mode": "HITL",
-          "status": "not_started",
-          "notes": "",
+          "title": "Cloud Deployment",
+          "mode": "Guided",
+          "status": "in_progress",
+          "notes": "Confirmed target Google Cloud Dev Project ID vertex-ai-demos-468803 (Vertex AI Demos). Verified active principal admin@rahulsankrut.altostrat.com, local ADC, IAM roles (roles/owner, roles/aiplatform.admin, roles/artifactregistry.writer, roles/cloudbuild.builds.editor, roles/iam.serviceAccountUser, roles/serviceusage.serviceUsageAdmin), and verified all 6 required APIs enabled (run.googleapis.com, artifactregistry.googleapis.com, cloudbuild.googleapis.com, aiplatform.googleapis.com, generativelanguage.googleapis.com, secretmanager.googleapis.com) with keyless Vertex AI ADC runtime config.",
           "items": [
             {
               "id": "p8-gcp-project",
-              "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
-              "completed": false
+              "label": "Confirm target Google Cloud project, billing & IAM (/gcloud)",
+              "completed": true
             },
             {
               "id": "p8-apis-secrets",
-              "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
-              "completed": false
+              "label": "Enable required Cloud APIs & configure secrets",
+              "completed": true
             },
             {
               "id": "p8-deploy",
-              "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+              "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
               "completed": false
             },
             {
               "id": "p8-smoke-test",
-              "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+              "label": "Smoke-test live deployment URL in browser (/browser)",
               "completed": false
             }
           ]
@@ -549,38 +549,38 @@
     {
       "id": "phase-1",
       "number": 1,
-      "title": "Idea, Research & Prototyping",
-      "mode": "HITL",
+      "title": "Brief & Setup",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Completed UI/UX cognitive load audit of src/client/App.tsx (1,098 lines) vs. Storycraft & Material 3 progressive disclosure patterns, verified Vertex AI ADC (vertex-ai-demos-468803), and updated research.md.",
       "items": [
         {
           "id": "p1-brief",
-          "label": "Capture feature brief or stakeholder transcript (client-brief.md)",
+          "label": "Write problem brief (client-brief.md)",
           "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
         },
         {
           "id": "p1-scaffold",
-          "label": "Scaffold workflow files (AGENTS.md, issues/, issues/done/, ralph/)",
+          "label": "Initialize project workspace (AGENTS.md, issues/, ralph/)",
           "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
         },
         {
           "id": "p1-credentials",
-          "label": "Verify required API keys (.env) & Cloud Auth (prebuilt credentials / google-cloud-auth-verification)",
+          "label": "Verify Cloud authentication & API keys (.env)",
           "completed": true
         },
         {
           "id": "p1-research",
-          "label": "Cache codebase & domain exploration in research.md (optional)",
+          "label": "Document codebase & domain context in research.md (optional)",
           "completed": true
         },
         {
           "id": "p1-prototype",
-          "label": "Build disposable UI prototypes (prebuilt hand-drawn-ui / hifi-mockup-kit) (optional)",
+          "label": "Explore UI direction with quick prototypes (optional)",
           "completed": true
         }
       ]
@@ -588,29 +588,29 @@
     {
       "id": "phase-2",
       "number": 2,
-      "title": "The Grill Session (Native /grill-me)",
-      "mode": "HITL",
+      "title": "Design Discovery",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Aligned on Option A (4-Step Storycraft Pill Flow: 1. Brief, 2. Storyboard & Visuals, 3. Voice & Soundtrack, 4. Final Cut). Removed Brand Guardrails, Custom Brand Kit, Brand Eval Scorecard, raw FFmpeg filtergraphs, and raw interaction/model ID badges from UI. Unified Keyframes & Motion into visual-first Scene Cards with an Image/Video toggle, collapsible Reference Anchors drawer, and On-Demand Scene Inspector Modal.",
       "items": [
         {
           "id": "p2-invoke",
-          "label": "Run native /grill-me interview against client-brief.md & codebase",
+          "label": "Run interactive design Q&A (/grill-me) on the brief",
           "completed": true
         },
         {
           "id": "p2-decisions",
-          "label": "Resolve decision tree dependencies one by one",
+          "label": "Resolve core user flows & architecture choices",
           "completed": true
         },
         {
           "id": "p2-edgecases",
-          "label": "Settle nasty edge cases (auth, quotas, permissions, schemas)",
+          "label": "Define auth, data model & error-handling edge cases",
           "completed": true
         },
         {
           "id": "p2-shared",
-          "label": "Confirm shared design concept (Fred Brooks alignment)",
+          "label": "Lock in final design direction",
           "completed": true
         }
       ]
@@ -618,29 +618,29 @@
     {
       "id": "phase-3",
       "number": 3,
-      "title": "Destination Plan & Contracts (Native /plan + Prebuilt /sdd)",
-      "mode": "HITL",
+      "title": "Technical Spec (PRD)",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Generated issues/prd.md for Iteration #2 (Option A 4-Step Storycraft Flow + On-Demand Scene Inspector Modal, studioViewModel deep module, and removal of Brand Guardrails / Brand Eval Scorecard / raw FFmpeg telemetry).",
       "items": [
         {
           "id": "p3-modules",
-          "label": "Review & approve proposed Deep Modules and interfaces (/plan)",
+          "label": "Define core modules & public interfaces (/plan)",
           "completed": true
         },
         {
           "id": "p3-testing",
-          "label": "Confirm behavioral testing decisions & required credentials",
+          "label": "Specify integration test boundaries & required credentials",
           "completed": true
         },
         {
           "id": "p3-outofscope",
-          "label": "Verify Out of Scope section records negative decisions & forbids silent fallback stubs",
+          "label": "Document explicit non-goals & out-of-scope items",
           "completed": true
         },
         {
           "id": "p3-prd-written",
-          "label": "Generate issues/prd.md destination document (& optional specs/ contracts)",
+          "label": "Write technical spec (issues/prd.md)",
           "completed": true
         }
       ]
@@ -648,34 +648,34 @@
     {
       "id": "phase-4",
       "number": 4,
-      "title": "Vertical Tracer Bullets (issues/NNN-*.md)",
-      "mode": "HITL",
+      "title": "Task Breakdown",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Sliced Iteration #2 PRD into 3 vertical tracer-bullet tickets (010-4step-pill-nav-and-calm-brief-tracer.md, 011-unified-visual-storyboard-and-scene-modal.md, 012-streamlined-audio-and-pure-final-cut-theater.md).",
       "items": [
         {
           "id": "p4-draft",
-          "label": "Draft vertical tracer-bullet slices from issues/prd.md",
+          "label": "Break issues/prd.md into end-to-end feature slices",
           "completed": true
         },
         {
           "id": "p4-tracer",
-          "label": "Ensure Slice #1 is an end-to-end Tracer Bullet (reject horizontal DB-only slices)",
+          "label": "Verify Task #1 delivers a working end-to-end slice (schema + API + UI + test)",
           "completed": true
         },
         {
           "id": "p4-afk-tags",
-          "label": "Classify each slice as AFK (autonomous) or HITL (human-in-the-loop)",
+          "label": "Tag each task as Autonomous (AFK) or Guided (HITL)",
           "completed": true
         },
         {
           "id": "p4-dag",
-          "label": "Verify Blocked-by DAG relationships to unlock parallel branches",
+          "label": "Map task dependencies (Blocked by)",
           "completed": true
         },
         {
           "id": "p4-created",
-          "label": "Write local markdown tickets (issues/NNN-*.md)",
+          "label": "Save task files to issues/",
           "completed": true
         }
       ]
@@ -683,36 +683,36 @@
     {
       "id": "phase-5",
       "number": 5,
-      "title": "Autonomous Execution (Native /goal, /compact & Prebuilt Swarm)",
-      "mode": "AFK",
+      "title": "Test-Driven Build (TDD)",
+      "mode": "Autonomous",
       "status": "completed",
       "notes": "Completed all 3 vertical slices (010, 011, 012) plus Fast-Lane UX & Playback improvements (Kids/College/Executive 1-sentence presets, Motion Clips primary + Keyframes toggle, Voice Preset/Speed 1.25x/Style & Soundtrack Genre/Tempo/Instruments dropdowns alongside prompts, and disk-backed -movflags +faststart Master Cut .mp4 assembly). All 10 Vitest suites (16 tests) and Vite build pass.",
       "items": [
         {
           "id": "p5-once",
-          "label": "Rehearse single vertical slice iteration & observe agent",
+          "label": "Run first task with Red-Green-Refactor TDD (/tdd)",
           "completed": true
         },
         {
           "id": "p5-tdd",
-          "label": "Verify strict vertical TDD (1 failing test RED -> minimal code GREEN -> repeat)",
+          "label": "Verify behavioral tests pass against real interfaces (no production mock fallbacks)",
           "completed": true
         },
         {
           "id": "p5-loops",
-          "label": "Verify automated feedback loops pass (tests + typecheck)",
+          "label": "Pass full test suite & typecheck",
           "completed": true
         },
         {
           "id": "p5-commit",
-          "label": "Verify structured commit & move completed ticket to issues/done/",
+          "label": "Commit changes & move completed task to issues/done/",
           "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
         },
         {
           "id": "p5-afk-all",
-          "label": "Complete all unblocked AFK slices (via native /goal or prebuilt teamwork/swarm)",
+          "label": "Complete all unblocked tasks (/goal or /teamwork)",
           "completed": true,
           "userToggled": false,
           "manuallyUnchecked": false
@@ -722,29 +722,29 @@
     {
       "id": "phase-6",
       "number": 6,
-      "title": "Review & Live Browser QA (Native /browser + Prebuilt Critique)",
-      "mode": "HITL",
+      "title": "Code Review & Browser QA",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Completed fresh-context automated code review, live browser QA on http://127.0.0.1:4190, verified real 16.62 MB H.264/AAC Master Cut .mp4 playback in Step 4, and archived updated PRD to issues/done/prd-iter2.md.",
       "items": [
         {
           "id": "p6-review",
-          "label": "Run fresh-context automated code review with pushed coding standards",
+          "label": "Run automated code & security review against issues/prd.md",
           "completed": true
         },
         {
           "id": "p6-manual-qa",
-          "label": "Run live browser QA (Native /browser + prebuilt design-critique / chrome-devtools)",
+          "label": "Test live user flows end-to-end in the browser (/browser)",
           "completed": true
         },
         {
           "id": "p6-qa-tickets",
-          "label": "File any discovered QA bugs as new vertical tickets in issues/",
+          "label": "Log any QA bugs as follow-up tasks in issues/",
           "completed": true
         },
         {
           "id": "p6-archive-prd",
-          "label": "Archive completed issues/prd.md into issues/done/ to prevent Doc Rot",
+          "label": "Archive completed issues/prd.md to issues/done/",
           "completed": true
         }
       ]
@@ -752,24 +752,24 @@
     {
       "id": "phase-7",
       "number": 7,
-      "title": "Deep Architecture & Memory (Native /learn)",
-      "mode": "HITL",
+      "title": "Architecture & Learnings",
+      "mode": "Guided",
       "status": "completed",
       "notes": "Completed Ousterhout deep-module refactor of studioViewModel across all 4 steps and synced AGENTS.md Living System Map + issues/done/prd-iter2.md Fast-Lane Prompt Updates.",
       "items": [
         {
           "id": "p7-explore",
-          "label": "Scan codebase for shallow modules & seam friction",
+          "label": "Audit codebase for tightly coupled or pass-through modules",
           "completed": true
         },
         {
           "id": "p7-compare",
-          "label": "Compare 3+ radical interface designs (Minimalist vs. Flexible vs. Caller-Optimized)",
+          "label": "Evaluate simpler module interface alternatives",
           "completed": true
         },
         {
           "id": "p7-rfc",
-          "label": "Persist architectural conventions via native /learn & file refactor tickets in issues/",
+          "label": "Save project conventions & learnings (/learn)",
           "completed": true
         }
       ]
@@ -777,29 +777,29 @@
     {
       "id": "phase-8",
       "number": 8,
-      "title": "Deploy to Dev Environment (Google Cloud Project)",
-      "mode": "HITL",
-      "status": "not_started",
-      "notes": "",
+      "title": "Cloud Deployment",
+      "mode": "Guided",
+      "status": "in_progress",
+      "notes": "Confirmed target Google Cloud Dev Project ID vertex-ai-demos-468803 (Vertex AI Demos). Verified active principal admin@rahulsankrut.altostrat.com, local ADC, IAM roles (roles/owner, roles/aiplatform.admin, roles/artifactregistry.writer, roles/cloudbuild.builds.editor, roles/iam.serviceAccountUser, roles/serviceusage.serviceUsageAdmin), and verified all 6 required APIs enabled (run.googleapis.com, artifactregistry.googleapis.com, cloudbuild.googleapis.com, aiplatform.googleapis.com, generativelanguage.googleapis.com, secretmanager.googleapis.com) with keyless Vertex AI ADC runtime config.",
       "items": [
         {
           "id": "p8-gcp-project",
-          "label": "Verify target Google Cloud Dev Project ID, billing & IAM/ADC (gcloud / google-cloud-auth-verification)",
-          "completed": false
+          "label": "Confirm target Google Cloud project, billing & IAM (/gcloud)",
+          "completed": true
         },
         {
           "id": "p8-apis-secrets",
-          "label": "Enable required Google Cloud APIs & configure Secret Manager / env vars (GEMINI_API_KEY, Maps, DB)",
-          "completed": false
+          "label": "Enable required Cloud APIs & configure secrets",
+          "completed": true
         },
         {
           "id": "p8-deploy",
-          "label": "Deploy application or ADK agent to Google Cloud Dev (Cloud Run / Vertex AI Agent Engine / Firebase)",
+          "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
           "completed": false
         },
         {
           "id": "p8-smoke-test",
-          "label": "Run live smoke test & browser verification against deployed Google Cloud Dev URL (/browser)",
+          "label": "Smoke-test live deployment URL in browser (/browser)",
           "completed": false
         }
       ]
