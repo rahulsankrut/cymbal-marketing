@@ -5,7 +5,7 @@
   "activeIterationId": "iter-mvvln6yx-i3i9",
   "activeIterationTitle": "Iter #2: UI and UX simplification",
   "brief": "Lets focus on User interface and experience, the UI has lot of information and users will be overwhelmed. We need to make it simple",
-  "updatedAt": "2026-11-02T16:58:18.624Z",
+  "updatedAt": "2026-11-02T17:44:01.493Z",
   "iterations": [
     {
       "id": "iter-mvv00qd2-1kr7",
@@ -517,8 +517,8 @@
           "number": 8,
           "title": "Cloud Deployment",
           "mode": "Guided",
-          "status": "in_progress",
-          "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app (2 vCPU, 2 GiB RAM, 300s timeout, FFmpeg + Node 22 + keyless Vertex AI ADC). Verified live /api/health, /api/bootstrap, and SPA HTML HTTP 200.",
+          "status": "completed",
+          "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app and passed full 4-step live browser smoke test (live Vertex AI storyboard generation, Scene Inspector modal, batch keyframe synthesis, per-scene TTS + FFmpeg atempo voiceover synthesis, and FFmpeg Master Cut .MP4 theater playback with 0 JS console errors and 56/56 200/206 network responses).",
           "items": [
             {
               "id": "p8-gcp-project",
@@ -533,12 +533,14 @@
             {
               "id": "p8-deploy",
               "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
-              "completed": true
+              "completed": true,
+              "userToggled": true,
+              "manuallyUnchecked": false
             },
             {
               "id": "p8-smoke-test",
               "label": "Smoke-test live deployment URL in browser (/browser)",
-              "completed": false
+              "completed": true
             }
           ]
         }
@@ -779,8 +781,8 @@
       "number": 8,
       "title": "Cloud Deployment",
       "mode": "Guided",
-      "status": "in_progress",
-      "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app (2 vCPU, 2 GiB RAM, 300s timeout, FFmpeg + Node 22 + keyless Vertex AI ADC). Verified live /api/health, /api/bootstrap, and SPA HTML HTTP 200.",
+      "status": "completed",
+      "notes": "Deployed cymbal-aerospace-marketing-studio (revision cymbal-aerospace-marketing-studio-00001-c44) to Cloud Run in us-central1 on vertex-ai-demos-468803 at https://cymbal-aerospace-marketing-studio-5udif2v3cq-uc.a.run.app and passed full 4-step live browser smoke test (live Vertex AI storyboard generation, Scene Inspector modal, batch keyframe synthesis, per-scene TTS + FFmpeg atempo voiceover synthesis, and FFmpeg Master Cut .MP4 theater playback with 0 JS console errors and 56/56 200/206 network responses).",
       "items": [
         {
           "id": "p8-gcp-project",
@@ -795,12 +797,14 @@
         {
           "id": "p8-deploy",
           "label": "Deploy app or agent to Cloud Run / Vertex AI / Firebase",
-          "completed": true
+          "completed": true,
+          "userToggled": true,
+          "manuallyUnchecked": false
         },
         {
           "id": "p8-smoke-test",
           "label": "Smoke-test live deployment URL in browser (/browser)",
-          "completed": false
+          "completed": true
         }
       ]
     }
